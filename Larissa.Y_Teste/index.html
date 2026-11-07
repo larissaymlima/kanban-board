@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f5f7f8">
+  <title>Quadro Kanban</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <main class="app-shell">
+    <section class="board-heading" aria-labelledby="page-title">
+      <div>
+        <h1 id="page-title">Quadro de tarefas</h1>
+      </div>
+    </section>
+
+    <section class="board" aria-label="Quadro Kanban de tarefas">
+      <section class="board-column" data-status="todo" aria-labelledby="heading-todo">
+        <header class="column-header">
+          <div class="column-title-wrap"><span class="column-indicator indicator-todo"></span><h2 id="heading-todo">A fazer</h2></div>
+          <span class="task-count" aria-label="0 tarefas">0</span>
+        </header>
+        <button class="column-add-task" type="button" data-status="todo"><span aria-hidden="true">+</span> Nova Tarefa</button>
+        <div class="card-list" aria-label="Tarefas a fazer"></div>
+      </section>
+
+      <section class="board-column" data-status="progress" aria-labelledby="heading-progress">
+        <header class="column-header">
+          <div class="column-title-wrap"><span class="column-indicator indicator-progress"></span><h2 id="heading-progress">Em andamento</h2></div>
+          <span class="task-count" aria-label="0 tarefas">0</span>
+        </header>
+        <button class="column-add-task" type="button" data-status="progress"><span aria-hidden="true">+</span> Nova Tarefa</button>
+        <div class="card-list" aria-label="Tarefas em andamento"></div>
+      </section>
+
+      <section class="board-column" data-status="review" aria-labelledby="heading-review">
+        <header class="column-header">
+          <div class="column-title-wrap"><span class="column-indicator indicator-review"></span><h2 id="heading-review">Em revisão</h2></div>
+          <span class="task-count" aria-label="0 tarefas">0</span>
+        </header>
+        <button class="column-add-task" type="button" data-status="review"><span aria-hidden="true">+</span> Nova Tarefa</button>
+        <div class="card-list" aria-label="Tarefas em revisão"></div>
+      </section>
+
+      <section class="board-column" data-status="done" aria-labelledby="heading-done">
+        <header class="column-header">
+          <div class="column-title-wrap"><span class="column-indicator indicator-done"></span><h2 id="heading-done">Concluído</h2></div>
+          <span class="task-count" aria-label="0 tarefas">0</span>
+        </header>
+        <button class="column-add-task" type="button" data-status="done"><span aria-hidden="true">+</span> Nova Tarefa</button>
+        <div class="card-list" aria-label="Tarefas concluídas"></div>
+      </section>
+    </section>
+    <p class="sr-only" id="board-announcement" aria-live="polite"></p>
+  </main>
+
+  <dialog class="task-dialog" id="task-dialog" aria-labelledby="dialog-title">
+    <form id="task-form">
+      <div class="dialog-heading">
+        <div>
+          <h2 id="dialog-title">Adicionar tarefa</h2>
+        </div>
+        <button class="close-dialog" type="button" id="close-task-form" aria-label="Fechar">×</button>
+      </div>
+      <label for="task-title">Título da tarefa</label>
+      <input id="task-title" name="title" type="text" maxlength="100" placeholder="Ex.: Preparar contestação" required>
+      <label for="task-description">Descrição <span class="optional">(opcional)</span></label>
+      <textarea id="task-description" name="description" rows="3" maxlength="300" placeholder="Adicione detalhes sobre a tarefa"></textarea>
+      <div class="dialog-actions">
+        <button class="cancel-button" type="button" id="cancel-task-form">Cancelar</button>
+        <button class="add-task-button" id="task-submit" type="submit">Adicionar tarefa</button>
+      </div>
+    </form>
+  </dialog>
+</body>
+</html>
