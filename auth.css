@@ -1,0 +1,480 @@
+:root { /* Estilos do seletor :root. */
+  --bg: #f4f7fb; /* Configura --bg com valor #f4f7fb. */
+  --panel: #ffffff; /* Configura --panel com valor #ffffff. */
+  --panel-alt: #eef4ff; /* Configura --panel-alt com valor #eef4ff. */
+  --primary: #4f46e5; /* Configura --primary com valor #4f46e5. */
+  --primary-dark: #3730a3; /* Configura --primary-dark com valor #3730a3. */
+  --primary-soft: rgba(79, 70, 229, 0.12); /* Configura --primary-soft com valor rgba(79, 70, 229, 0.12). */
+  --text: #1f2937; /* Configura --text com valor #1f2937. */
+  --muted: #6b7280; /* Configura --muted com valor #6b7280. */
+  --line: #e5e7eb; /* Configura --line com valor #e5e7eb. */
+  --success: #10b981; /* Configura --success com valor #10b981. */
+  --danger: #ef4444; /* Configura --danger com valor #ef4444. */
+  --shadow: 0 20px 45px rgba(31, 41, 55, 0.12); /* Configura --shadow com valor 0 20px 45px rgba(31, 41, 55, 0.12). */
+}
+
+* { /* Estilos do seletor *. */
+  box-sizing: border-box; /* Configura box-sizing com valor border-box. */
+}
+
+body.auth-page { /* Estilos do seletor body.auth-page. */
+  margin: 0; /* Configura margin com valor 0. */
+  min-width: 320px; /* Configura min-width com valor 320px. */
+  min-height: 100vh; /* Configura min-height com valor 100vh. */
+  display: flex; /* Organiza o cabeçalho e o formulário em uma coluna. */
+  flex-direction: column; /* Coloca o cabeçalho acima do formulário. */
+  align-items: center; /* Centraliza o conteúdo sem limitar a largura do cabeçalho. */
+  padding: 0 0 24px; /* Mantém o cabeçalho no topo e espaça o conteúdo inferior. */
+  background: linear-gradient(135deg, #edf3ff 0%, #f4f7fb 100%); /* Configura background com valor linear-gradient(135deg, #edf3ff 0%, #f4f7fb 100%). */
+  font-family: Arial, Helvetica, sans-serif; /* Configura font-family com valor Arial, Helvetica, sans-serif. */
+  color: var(--text); /* Configura color com valor var(--text). */
+  overflow-x: hidden; /* Configura overflow-x com valor hidden. */
+}
+
+/* Faz o cabeçalho compartilhado ocupar toda a largura nas telas de autenticação. */
+body.auth-page > .site-header {
+  align-self: stretch;
+}
+
+img { /* Estilos do seletor img. */
+  max-width: 100%; /* Configura max-width com valor 100%. */
+  display: block; /* Configura display com valor block. */
+}
+
+button,
+input { /* Estilos do seletor input. */
+  font: inherit; /* Configura font com valor inherit. */
+}
+
+.auth-shell { /* Estilos do seletor .auth-shell. */
+  width: min(1100px, calc(100% - 32px)); /* Configura width com valor min(1100px, calc(100% - 32px)). */
+  margin: auto; /* Centraliza o formulário no espaço restante sob o cabeçalho. */
+  min-width: 0; /* Configura min-width com valor 0. */
+  display: grid; /* Configura display com valor grid. */
+  grid-template-columns: 1.1fr 1fr; /* Configura grid-template-columns com valor 1.1fr 1fr. */
+  background: rgba(255, 255, 255, 0.8); /* Configura background com valor rgba(255, 255, 255, 0.8). */
+  border: 1px solid rgba(255, 255, 255, 0.7); /* Configura border com valor 1px solid rgba(255, 255, 255, 0.7). */
+  border-radius: 28px; /* Configura border-radius com valor 28px. */
+  box-shadow: var(--shadow); /* Configura box-shadow com valor var(--shadow). */
+  overflow: hidden; /* Configura overflow com valor hidden. */
+  backdrop-filter: blur(12px); /* Configura backdrop-filter com valor blur(12px). */
+}
+
+.auth-visual { /* Estilos do seletor .auth-visual. */
+  min-width: 0; /* Configura min-width com valor 0. */
+  padding: 48px 40px; /* Configura padding com valor 48px 40px. */
+  background: linear-gradient(180deg, #2b2f88 0%, #1f255f 100%); /* Configura background com valor linear-gradient(180deg, #2b2f88 0%, #1f255f 100%). */
+  color: #fff; /* Configura color com valor #fff. */
+}
+
+.logo-box { /* Estilos do seletor .logo-box. */
+  display: inline-flex; /* Configura display com valor inline-flex. */
+  align-items: center; /* Configura align-items com valor center. */
+  gap: 10px; /* Configura gap com valor 10px. */
+  padding: 8px 14px; /* Configura padding com valor 8px 14px. */
+  border-radius: 999px; /* Configura border-radius com valor 999px. */
+  background: rgba(255, 255, 255, 0.08); /* Configura background com valor rgba(255, 255, 255, 0.08). */
+  font-weight: 700; /* Configura font-weight com valor 700. */
+  letter-spacing: 0.02em; /* Configura letter-spacing com valor 0.02em. */
+}
+
+.brand-mark { /* Estilos do seletor .brand-mark. */
+  display: inline-grid; /* Configura display com valor inline-grid. */
+  place-items: center; /* Configura place-items com valor center. */
+  width: 28px; /* Configura width com valor 28px. */
+  height: 28px; /* Configura height com valor 28px. */
+  border-radius: 10px; /* Configura border-radius com valor 10px. */
+  background: linear-gradient(135deg, #8b5cf6, #60a5fa); /* Configura background com valor linear-gradient(135deg, #8b5cf6, #60a5fa). */
+  font-size: 0.9rem; /* Configura font-size com valor 0.9rem. */
+}
+
+.auth-visual h1 { /* Estilos do seletor .auth-visual h1. */
+  margin: 28px 0 12px; /* Configura margin com valor 28px 0 12px. */
+  font-size: clamp(2rem, 3vw, 3rem); /* Configura font-size com valor clamp(2rem, 3vw, 3rem). */
+  line-height: 1.1; /* Configura line-height com valor 1.1. */
+}
+
+.auth-visual p { /* Estilos do seletor .auth-visual p. */
+  margin: 0; /* Configura margin com valor 0. */
+  max-width: 420px; /* Configura max-width com valor 420px. */
+  color: rgba(255, 255, 255, 0.8); /* Configura color com valor rgba(255, 255, 255, 0.8). */
+  line-height: 1.7; /* Configura line-height com valor 1.7. */
+}
+
+.mini-board { /* Estilos do seletor .mini-board. */
+  min-width: 0; /* Configura min-width com valor 0. */
+  display: grid; /* Configura display com valor grid. */
+  grid-template-columns: repeat(2, minmax(0, 1fr)); /* Configura grid-template-columns com valor repeat(2, minmax(0, 1fr)). */
+  gap: 20px; /* Configura gap com valor 20px. */
+  margin-top: 30px; /* Configura margin-top com valor 30px. */
+  padding: 18px; /* Configura padding com valor 18px. */
+  border-radius: 22px; /* Configura border-radius com valor 22px. */
+  background: rgba(255, 255, 255, 0.08); /* Configura background com valor rgba(255, 255, 255, 0.08). */
+}
+
+.mini-column { /* Estilos do seletor .mini-column. */
+  display: flex; /* Configura display com valor flex. */
+  flex-direction: column; /* Configura flex-direction com valor column. */
+  gap: 10px; /* Configura gap com valor 10px. */
+  padding: 14px 12px; /* Configura padding com valor 14px 12px. */
+  border-radius: 14px; /* Configura border-radius com valor 14px. */
+  background: rgba(15, 23, 42, 0.18); /* Configura background com valor rgba(15, 23, 42, 0.18). */
+}
+
+.mini-column span { /* Estilos do seletor .mini-column span. */
+  color: rgba(255, 255, 255, 0.75); /* Configura color com valor rgba(255, 255, 255, 0.75). */
+  font-size: 0.82rem; /* Configura font-size com valor 0.82rem. */
+}
+
+.mini-card { /* Estilos do seletor .mini-card. */
+  padding: 10px 12px; /* Configura padding com valor 10px 12px. */
+  border-radius: 10px; /* Configura border-radius com valor 10px. */
+  font-size: 0.8rem; /* Configura font-size com valor 0.8rem. */
+  font-weight: 600; /* Configura font-weight com valor 600. */
+}
+
+.mini-card.blue { /* Estilos do seletor .mini-card.blue. */
+  background: rgba(96, 165, 250, 0.2); /* Configura background com valor rgba(96, 165, 250, 0.2). */
+  color: #dbeafe; /* Configura color com valor #dbeafe. */
+}
+
+.mini-card.purple { /* Estilos do seletor .mini-card.purple. */
+  background: rgba(168, 85, 247, 0.2); /* Configura background com valor rgba(168, 85, 247, 0.2). */
+  color: #f3e8ff; /* Configura color com valor #f3e8ff. */
+}
+
+.mini-card.green { /* Estilos do seletor .mini-card.green. */
+  background: rgba(16, 185, 129, 0.2); /* Configura background com valor rgba(16, 185, 129, 0.2). */
+  color: #d1fae5; /* Configura color com valor #d1fae5. */
+}
+
+.auth-card { /* Estilos do seletor .auth-card. */
+  min-width: 0; /* Configura min-width com valor 0. */
+  display: flex; /* Configura display com valor flex. */
+  align-items: center; /* Configura align-items com valor center. */
+  justify-content: center; /* Configura justify-content com valor center. */
+  padding: 44px 36px; /* Configura padding com valor 44px 36px. */
+  background: #fff; /* Configura background com valor #fff. */
+}
+
+#loginForm,
+#cadastroForm { /* Estilos do seletor #cadastroForm. */
+  width: min(100%, 390px); /* Configura width com valor min(100%, 390px). */
+}
+
+.cadastro-shell { /* Estilos do seletor .cadastro-shell. */
+  width: min(1100px, calc(100% - 32px)); /* Configura width com valor min(1100px, calc(100% - 32px)). */
+}
+
+.cadastro-shell .auth-visual { /* Estilos do seletor .cadastro-shell .auth-visual. */
+  display: flex; /* Configura display com valor flex. */
+  flex-direction: column; /* Configura flex-direction com valor column. */
+  justify-content: center; /* Configura justify-content com valor center. */
+  padding: 40px; /* Configura padding com valor 40px. */
+}
+
+.cadastro-shell .mini-board { /* Estilos do seletor .cadastro-shell .mini-board. */
+  width: min(100%, 390px); /* Configura width com valor min(100%, 390px). */
+  align-self: center; /* Configura align-self com valor center. */
+  gap: 12px; /* Configura gap com valor 12px. */
+  margin-top: 24px; /* Configura margin-top com valor 24px. */
+  padding: 14px; /* Configura padding com valor 14px. */
+}
+
+.cadastro-shell .mini-column { /* Estilos do seletor .cadastro-shell .mini-column. */
+  min-width: 0; /* Configura min-width com valor 0. */
+  padding: 12px 10px; /* Configura padding com valor 12px 10px. */
+}
+
+.cadastro-shell .mini-card { /* Estilos do seletor .cadastro-shell .mini-card. */
+  padding: 9px; /* Configura padding com valor 9px. */
+  overflow-wrap: anywhere; /* Configura overflow-wrap com valor anywhere. */
+}
+
+.cadastro-card { /* Estilos do seletor .cadastro-card. */
+  padding: 38px 44px; /* Configura padding com valor 38px 44px. */
+}
+
+#cadastroForm .auth-header { /* Estilos do seletor #cadastroForm .auth-header. */
+  margin-bottom: 20px; /* Configura margin-bottom com valor 20px. */
+}
+
+#cadastroForm > input { /* Estilos do seletor #cadastroForm > input. */
+  margin-bottom: 14px; /* Configura margin-bottom com valor 14px. */
+}
+
+#cadastroForm .privacy-consent { /* Estilos do seletor #cadastroForm .privacy-consent. */
+  padding: 12px 14px; /* Configura padding com valor 12px 14px. */
+  border: 1px solid var(--line); /* Configura border com valor 1px solid var(--line). */
+  border-radius: 12px; /* Configura border-radius com valor 12px. */
+  background: #f8f9ff; /* Configura background com valor #f8f9ff. */
+}
+
+.auth-header { /* Estilos do seletor .auth-header. */
+  margin-bottom: 22px; /* Configura margin-bottom com valor 22px. */
+}
+
+.eyebrow { /* Estilos do seletor .eyebrow. */
+  display: inline-block; /* Configura display com valor inline-block. */
+  margin-bottom: 8px; /* Configura margin-bottom com valor 8px. */
+  color: var(--primary); /* Configura color com valor var(--primary). */
+  font-size: 0.76rem; /* Configura font-size com valor 0.76rem. */
+  font-weight: 700; /* Configura font-weight com valor 700. */
+  letter-spacing: 0.08em; /* Configura letter-spacing com valor 0.08em. */
+  text-transform: uppercase; /* Configura text-transform com valor uppercase. */
+}
+
+.auth-header h2 { /* Estilos do seletor .auth-header h2. */
+  margin: 0; /* Configura margin com valor 0. */
+  font-size: clamp(1.8rem, 2vw, 2.3rem); /* Configura font-size com valor clamp(1.8rem, 2vw, 2.3rem). */
+}
+
+label { /* Estilos do seletor label. */
+  display: block; /* Configura display com valor block. */
+  margin-bottom: 8px; /* Configura margin-bottom com valor 8px. */
+  font-size: 0.9rem; /* Configura font-size com valor 0.9rem. */
+  font-weight: 600; /* Configura font-weight com valor 600. */
+  color: var(--text); /* Configura color com valor var(--text). */
+}
+
+input { /* Estilos do seletor input. */
+  width: 100%; /* Configura width com valor 100%. */
+  margin-bottom: 18px; /* Configura margin-bottom com valor 18px. */
+  padding: 0.9rem 1rem; /* Configura padding com valor 0.9rem 1rem. */
+  border: 1px solid var(--line); /* Configura border com valor 1px solid var(--line). */
+  border-radius: 12px; /* Configura border-radius com valor 12px. */
+  background: #fff; /* Configura background com valor #fff. */
+  color: var(--text); /* Configura color com valor var(--text). */
+  transition: border-color 0.2s ease, box-shadow 0.2s ease; /* Configura transition com valor border-color 0.2s ease, box-shadow 0.2s ease. */
+}
+
+.password-field { /* Estilos do seletor .password-field. */
+  position: relative; /* Configura position com valor relative. */
+  width: 100%; /* Configura width com valor 100%. */
+}
+
+.password-field input { /* Estilos do seletor .password-field input. */
+  margin-bottom: 0; /* Configura margin-bottom com valor 0. */
+  padding-right: 92px; /* Configura padding-right com valor 92px. */
+}
+
+.toggle-password { /* Estilos do seletor .toggle-password. */
+  position: absolute; /* Configura position com valor absolute. */
+  top: 50%; /* Configura top com valor 50%. */
+  right: 10px; /* Configura right com valor 10px. */
+  transform: translateY(-50%); /* Configura transform com valor translateY(-50%). */
+  border: none; /* Configura border com valor none. */
+  background: transparent; /* Configura background com valor transparent. */
+  color: var(--primary); /* Configura color com valor var(--primary). */
+  font-size: 0.75rem; /* Configura font-size com valor 0.75rem. */
+  font-weight: 700; /* Configura font-weight com valor 700. */
+  cursor: pointer; /* Configura cursor com valor pointer. */
+  padding: 6px 8px; /* Configura padding com valor 6px 8px. */
+  border-radius: 8px; /* Configura border-radius com valor 8px. */
+}
+
+.toggle-password:hover { /* Estilos do seletor .toggle-password:hover. */
+  background: rgba(79, 70, 229, 0.08); /* Configura background com valor rgba(79, 70, 229, 0.08). */
+}
+
+input:focus { /* Estilos do seletor input:focus. */
+  outline: none; /* Configura outline com valor none. */
+  border-color: rgba(79, 70, 229, 0.7); /* Configura border-color com valor rgba(79, 70, 229, 0.7). */
+  box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1); /* Configura box-shadow com valor 0 0 0 4px rgba(79, 70, 229, 0.1). */
+}
+
+.btn { /* Estilos do seletor .btn. */
+  display: inline-flex; /* Configura display com valor inline-flex. */
+  align-items: center; /* Configura align-items com valor center. */
+  justify-content: center; /* Configura justify-content com valor center. */
+  gap: 8px; /* Configura gap com valor 8px. */
+  border: none; /* Configura border com valor none. */
+  border-radius: 12px; /* Configura border-radius com valor 12px. */
+  padding: 0.9rem 1.2rem; /* Configura padding com valor 0.9rem 1.2rem. */
+  font-weight: 700; /* Configura font-weight com valor 700. */
+  text-decoration: none; /* Configura text-decoration com valor none. */
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease; /* Configura transition com valor transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease. */
+  cursor: pointer; /* Configura cursor com valor pointer. */
+}
+
+.btn:hover { /* Estilos do seletor .btn:hover. */
+  transform: translateY(-1px); /* Configura transform com valor translateY(-1px). */
+}
+
+.btn-primary { /* Estilos do seletor .btn-primary. */
+  background: linear-gradient(135deg, var(--primary), #6d5efc); /* Configura background com valor linear-gradient(135deg, var(--primary), #6d5efc). */
+  color: #fff; /* Configura color com valor #fff. */
+  box-shadow: 0 12px 22px rgba(79, 70, 229, 0.24); /* Configura box-shadow com valor 0 12px 22px rgba(79, 70, 229, 0.24). */
+}
+
+.btn-secondary { /* Estilos do seletor .btn-secondary. */
+  background: #eef2ff; /* Configura background com valor #eef2ff. */
+  color: var(--primary-dark); /* Configura color com valor var(--primary-dark). */
+}
+
+.btn-block { /* Estilos do seletor .btn-block. */
+  width: 100%; /* Configura width com valor 100%. */
+}
+
+#loginForm .btn-block { /* Estilos do seletor #loginForm .btn-block. */
+  margin-top: 16px; /* Configura margin-top com valor 16px. */
+}
+
+#cadastroForm .btn-block { /* Estilos do seletor #cadastroForm .btn-block. */
+  margin-top: 20px; /* Configura margin-top com valor 20px. */
+}
+
+.privacy-consent { /* Estilos do seletor .privacy-consent. */
+  display: flex; /* Configura display com valor flex. */
+  align-items: flex-start; /* Configura align-items com valor flex-start. */
+  gap: 10px; /* Configura gap com valor 10px. */
+  margin-top: 18px; /* Configura margin-top com valor 18px. */
+  color: var(--muted); /* Configura color com valor var(--muted). */
+  font-size: 0.82rem; /* Configura font-size com valor 0.82rem. */
+  font-weight: 400; /* Configura font-weight com valor 400. */
+  line-height: 1.5; /* Configura line-height com valor 1.5. */
+}
+
+.privacy-consent input { /* Estilos do seletor .privacy-consent input. */
+  width: 17px; /* Configura width com valor 17px. */
+  height: 17px; /* Configura height com valor 17px. */
+  flex: 0 0 17px; /* Configura flex com valor 0 0 17px. */
+  margin: 1px 0 0; /* Configura margin com valor 1px 0 0. */
+  accent-color: var(--primary); /* Configura accent-color com valor var(--primary). */
+}
+
+.form-message { /* Estilos do seletor .form-message. */
+  min-height: 24px; /* Configura min-height com valor 24px. */
+  margin: 12px 0 0; /* Configura margin com valor 12px 0 0. */
+  font-size: 0.9rem; /* Configura font-size com valor 0.9rem. */
+  font-weight: 600; /* Configura font-weight com valor 600. */
+}
+
+.form-message.success { /* Estilos do seletor .form-message.success. */
+  color: var(--success); /* Configura color com valor var(--success). */
+}
+
+.form-message.error { /* Estilos do seletor .form-message.error. */
+  color: var(--danger); /* Configura color com valor var(--danger). */
+}
+
+.auth-link { /* Estilos do seletor .auth-link. */
+  margin-top: 20px; /* Configura margin-top com valor 20px. */
+  text-align: center; /* Configura text-align com valor center. */
+  color: var(--muted); /* Configura color com valor var(--muted). */
+}
+
+.auth-link a { /* Estilos do seletor .auth-link a. */
+  color: var(--primary); /* Configura color com valor var(--primary). */
+  font-weight: 700; /* Configura font-weight com valor 700. */
+  text-decoration: none; /* Configura text-decoration com valor none. */
+}
+
+@media (max-width: 820px) { /* Regras responsivas aplicadas neste ponto. */
+  .auth-shell { /* Estilos do seletor .auth-shell. */
+    grid-template-columns: 1fr; /* Configura grid-template-columns com valor 1fr. */
+    width: min(560px, calc(100% - 32px)); /* Configura width com valor min(560px, calc(100% - 32px)). */
+  }
+
+  .auth-visual { /* Estilos do seletor .auth-visual. */
+    padding: 30px 28px 24px; /* Configura padding com valor 30px 28px 24px. */
+  }
+
+  .cadastro-shell .auth-visual { /* Estilos do seletor .cadastro-shell .auth-visual. */
+    padding: 30px 28px 22px; /* Configura padding com valor 30px 28px 22px. */
+  }
+
+  .cadastro-shell .mini-board { /* Estilos do seletor .cadastro-shell .mini-board. */
+    width: min(100%, 360px); /* Configura width com valor min(100%, 360px). */
+    margin-top: 20px; /* Configura margin-top com valor 20px. */
+  }
+
+  .auth-card { /* Estilos do seletor .auth-card. */
+    padding: 26px 24px 34px; /* Configura padding com valor 26px 24px 34px. */
+  }
+}
+
+@media (max-width: 820px) { /* Regras responsivas aplicadas neste ponto. */
+  body.auth-page.cadastro-page { /* Estilos do seletor body.auth-page.cadastro-page. */
+    display: block; /* Configura display com valor block. */
+    padding: 0 0 16px; /* Mantém o cabeçalho alinhado ao topo e dá espaço abaixo do formulário. */
+    min-height: 100dvh; /* Configura min-height com valor 100dvh. */
+  }
+
+  body.auth-page.cadastro-page > .site-header {
+    margin-bottom: 16px;
+  }
+
+  .cadastro-shell { /* Estilos do seletor .cadastro-shell. */
+    margin: 0 auto; /* Configura margin com valor 0 auto. */
+  }
+
+  .cadastro-card { /* Estilos do seletor .cadastro-card. */
+    padding: 28px 24px 32px; /* Configura padding com valor 28px 24px 32px. */
+  }
+}
+
+@media (max-width: 520px) { /* Regras responsivas aplicadas neste ponto. */
+  body.auth-page { /* Estilos do seletor body.auth-page. */
+    display: block; /* Configura display com valor block. */
+    padding: 0 0 12px; /* Mantém o cabeçalho junto ao topo em telas estreitas. */
+  }
+
+  .auth-shell,
+  .cadastro-shell { /* Estilos do seletor .cadastro-shell. */
+    width: calc(100% - 24px); /* Configura width com valor calc(100% - 24px). */
+    margin: 0 auto; /* Configura margin com valor 0 auto. */
+    border-radius: 20px; /* Configura border-radius com valor 20px. */
+  }
+
+  .auth-visual,
+  .cadastro-shell .auth-visual { /* Estilos do seletor .cadastro-shell .auth-visual. */
+    padding: 24px 20px 20px; /* Configura padding com valor 24px 20px 20px. */
+  }
+
+  .auth-visual h1 { /* Estilos do seletor .auth-visual h1. */
+    margin-top: 20px; /* Configura margin-top com valor 20px. */
+    font-size: clamp(1.8rem, 9vw, 2.4rem); /* Configura font-size com valor clamp(1.8rem, 9vw, 2.4rem). */
+  }
+
+  .mini-board,
+  .cadastro-shell .mini-board { /* Estilos do seletor .cadastro-shell .mini-board. */
+    gap: 10px; /* Configura gap com valor 10px. */
+    margin-top: 18px; /* Configura margin-top com valor 18px. */
+    padding: 10px; /* Configura padding com valor 10px. */
+  }
+
+  .mini-column,
+  .cadastro-shell .mini-column { /* Estilos do seletor .cadastro-shell .mini-column. */
+    padding: 10px 8px; /* Configura padding com valor 10px 8px. */
+  }
+
+  .mini-card,
+  .cadastro-shell .mini-card { /* Estilos do seletor .cadastro-shell .mini-card. */
+    padding: 8px; /* Configura padding com valor 8px. */
+    font-size: 0.72rem; /* Configura font-size com valor 0.72rem. */
+  }
+
+  .auth-card,
+  .cadastro-card { /* Estilos do seletor .cadastro-card. */
+    padding: 24px 20px 28px; /* Configura padding com valor 24px 20px 28px. */
+  }
+
+  .auth-header { /* Estilos do seletor .auth-header. */
+    margin-bottom: 18px; /* Configura margin-bottom com valor 18px. */
+  }
+
+  input { /* Estilos do seletor input. */
+    padding: 0.85rem 0.9rem; /* Configura padding com valor 0.85rem 0.9rem. */
+  }
+
+  .privacy-consent { /* Estilos do seletor .privacy-consent. */
+    font-size: 0.78rem; /* Configura font-size com valor 0.78rem. */
+  }
+}
+
+@media (max-height: 700px) and (min-width: 821px) { /* Regras responsivas aplicadas neste ponto. */
+  body.auth-page { /* Estilos do seletor body.auth-page. */
+    justify-content: flex-start; /* Permite rolar a página quando a tela for baixa. */
+  }
+}

@@ -1,79 +1,200 @@
 <!DOCTYPE html>
+<!-- Informa ao navegador que o documento usa HTML5. -->
+<!-- Define o idioma principal da página para leitores de tela e mecanismos de busca. -->
 <html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#f5f7f8">
-  <title>Quadro Kanban</title>
-  <link rel="stylesheet" href="style.css">
-  <script src="script.js" defer></script>
-  <link rel="icon" href="data:,">
-</head>
-<body>
-  <main class="app-shell">
-    <section class="board-heading" aria-labelledby="page-title">
-      <div>
-        <h1 id="page-title">Quadro de tarefas</h1>
+  <head>
+    <!-- Define a codificação para exibir corretamente caracteres acentuados. -->
+    <meta charset="UTF-8" />
+    <!-- Ajusta a escala e a largura da página ao tamanho da tela do dispositivo. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Define o texto exibido na aba do navegador. -->
+    <title>KanbanFlow | Organize seu trabalho</title>
+    <!-- Resume o conteúdo da página para mecanismos de busca. -->
+    <meta
+      name="description"
+      content="Plataforma moderna de tarefas com quadro Kanban, organização visual e produtividade."
+    />
+    <!-- Carrega o cabeçalho compartilhado pelas páginas do site. -->
+    <link rel="stylesheet" href="site-header.css" />
+    <!-- Carrega os estilos da página inicial. -->
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <!-- Marca o corpo como página inicial para aplicar os estilos correspondentes. -->
+  <body class="landing-page">
+    <!-- Cabeçalho fixo com marca, navegação e acesso à conta. -->
+    <header class="site-header">
+      <div class="site-header-inner">
+        <!-- Exibe a marca e leva à página inicial. -->
+        <a class="site-brand" href="index.html" aria-label="KanbanFlow - página inicial">
+          <span class="site-brand-mark" aria-hidden="true">K</span>
+          <span>KanbanFlow</span>
+        </a>
+
+        <!-- Reúne navegação pelas seções e ações de acesso à conta. -->
+        <nav class="site-header-actions" aria-label="Navegação principal">
+          <a class="site-header-link" href="#recursos">Recursos</a>
+          <a class="site-header-link" href="#beneficios">Benefícios</a>
+          <a class="site-header-link" href="#precos">Preços</a>
+          <a class="site-header-link" href="login.html">Entrar</a>
+          <a class="site-header-link site-header-link-primary" href="cadastro.html">Criar conta</a>
+        </nav>
       </div>
-    </section>
+    </header>
 
-    <section class="board" aria-label="Quadro Kanban de tarefas">
-      <section class="board-column" data-status="todo" aria-labelledby="heading-todo">
-        <header class="column-header">
-          <div class="column-title-wrap"><span class="column-indicator indicator-todo"></span><h2 id="heading-todo">A fazer</h2></div>
-          <span class="task-count" aria-label="0 tarefas">0</span>
-        </header>
-        <button class="column-add-task" type="button" data-status="todo"><span aria-hidden="true">+</span> Nova Tarefa</button>
-        <div class="card-list" aria-label="Tarefas a fazer"></div>
-      </section>
+    <!-- Agrupa o conteúdo principal da landing page. -->
+    <main>
+      <!-- Apresenta a proposta do produto e os links de conversão. -->
+      <section class="hero">
+        <div class="container hero-grid">
+          <!-- Texto de apresentação, benefícios e chamadas para ação. -->
+          <div class="hero-copy">
+            <span class="eyebrow">Organização inteligente</span>
+            <h1>Transforme tarefas em progresso real.</h1>
+            <p>
+              Acompanhe entregas, priorize urgências e mantenha sua equipe alinhada em um
+              quadro visual que facilita a execução do dia a dia.
+            </p>
 
-      <section class="board-column" data-status="progress" aria-labelledby="heading-progress">
-        <header class="column-header">
-          <div class="column-title-wrap"><span class="column-indicator indicator-progress"></span><h2 id="heading-progress">Em andamento</h2></div>
-          <span class="task-count" aria-label="0 tarefas">0</span>
-        </header>
-        <button class="column-add-task" type="button" data-status="progress"><span aria-hidden="true">+</span> Nova Tarefa</button>
-        <div class="card-list" aria-label="Tarefas em andamento"></div>
-      </section>
+            <div class="hero-actions">
+              <a class="btn btn-primary" href="cadastro.html">Começar agora</a>
+              <a class="btn btn-secondary" href="login.html">Fazer login</a>
+            </div>
 
-      <section class="board-column" data-status="review" aria-labelledby="heading-review">
-        <header class="column-header">
-          <div class="column-title-wrap"><span class="column-indicator indicator-review"></span><h2 id="heading-review">Em revisão</h2></div>
-          <span class="task-count" aria-label="0 tarefas">0</span>
-        </header>
-        <button class="column-add-task" type="button" data-status="review"><span aria-hidden="true">+</span> Nova Tarefa</button>
-        <div class="card-list" aria-label="Tarefas em revisão"></div>
-      </section>
+            <!-- Lista resumida das vantagens do KanbanFlow. -->
+            <ul class="hero-points" aria-label="Principais vantagens">
+              <li>Quadro Kanban com colunas personalizadas</li>
+              <li>Gestão de tarefas em equipe</li>
+              <li>Visual limpo e foco em produtividade</li>
+            </ul>
+          </div>
 
-      <section class="board-column" data-status="done" aria-labelledby="heading-done">
-        <header class="column-header">
-          <div class="column-title-wrap"><span class="column-indicator indicator-done"></span><h2 id="heading-done">Concluído</h2></div>
-          <span class="task-count" aria-label="0 tarefas">0</span>
-        </header>
-        <button class="column-add-task" type="button" data-status="done"><span aria-hidden="true">+</span> Nova Tarefa</button>
-        <div class="card-list" aria-label="Tarefas concluídas"></div>
-      </section>
-    </section>
-    <p class="sr-only" id="board-announcement" aria-live="polite"></p>
-  </main>
+          <!-- Ilustração estática de um quadro Kanban. -->
+          <div class="hero-preview" aria-label="Preview do quadro Kanban">
+            <div class="board-preview">
+              <div class="preview-column">
+                <span class="preview-label">A fazer</span>
+                <div class="preview-card accent-blue">Planejar sprint</div>
+                <div class="preview-card accent-slate">Organizar briefing</div>
+              </div>
 
-  <dialog class="task-dialog" id="task-dialog" aria-labelledby="dialog-title">
-    <form id="task-form">
-      <div class="dialog-heading">
-        <div>
-          <h2 id="dialog-title">Adicionar tarefa</h2>
+              <div class="preview-column">
+                <span class="preview-label">Em andamento</span>
+                <div class="preview-card accent-purple">Desenvolver UI</div>
+              </div>
+
+              <div class="preview-column">
+                <span class="preview-label">Concluído</span>
+                <div class="preview-card accent-green">Entrevista com cliente</div>
+                <div class="preview-card accent-green">Relatório final</div>
+              </div>
+            </div>
+          </div>
         </div>
-        <button class="close-dialog" type="button" id="close-task-form" aria-label="Fechar">×</button>
+      </section>
+
+      <!-- Lista os principais recursos oferecidos pelo produto. -->
+      <section class="features" id="recursos">
+        <div class="container">
+          <div class="section-header">
+            <span class="eyebrow">Recursos</span>
+            <h2>Gerencie seu fluxo de trabalho com clareza</h2>
+          </div>
+
+          <!-- Organiza os recursos em cartões. -->
+          <div class="feature-grid">
+            <article class="feature-card">
+              <div class="icon">✓</div>
+              <h3>Prioridade visual</h3>
+              <p>Organize tarefas por status e foque no que precisa ser concluído primeiro.</p>
+            </article>
+
+            <article class="feature-card">
+              <div class="icon">⚡</div>
+              <h3>Fluxo rápido</h3>
+              <p>Crie e mova atividades com agilidade entre colunas do quadro.</p>
+            </article>
+
+            <article class="feature-card">
+              <div class="icon">📊</div>
+              <h3>Visão estratégica</h3>
+              <p>Acompanhe o andamento geral e reduza gargalos em cada etapa do processo.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- Explica benefícios de organizar o trabalho com o quadro. -->
+      <section class="benefits" id="beneficios">
+        <div class="container benefits-grid">
+          <div>
+            <span class="eyebrow">Benefícios</span>
+            <h2>Mais foco, menos caos.</h2>
+          </div>
+
+          <!-- Apresenta os benefícios em uma lista numerada. -->
+          <div class="benefit-list">
+            <div>
+              <strong>01.</strong>
+              <p>Centralize ideias, pendências e entregas em um único lugar.</p>
+            </div>
+            <div>
+              <strong>02.</strong>
+              <p>Use o quadro para ajustar prioridades conforme novas demandas aparecem.</p>
+            </div>
+            <div>
+              <strong>03.</strong>
+              <p>Mantenha colaboração e transparência em cada etapa do projeto.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Apresenta as opções de plano disponíveis. -->
+      <section class="pricing" id="precos">
+        <div class="container">
+          <div class="section-header">
+            <span class="eyebrow">Planos</span>
+            <h2>Escolha o ideal para seu ritmo</h2>
+          </div>
+
+          <!-- Agrupa os cartões de preço e seus links de cadastro. -->
+          <div class="pricing-grid">
+            <article class="price-card">
+              <h3>Iniciante</h3>
+              <p class="price">Grátis</p>
+              <ul>
+                <li>Quadro básico</li>
+                <li>Até 3 projetos</li>
+                <li>Suporte por email</li>
+              </ul>
+              <a href="cadastro.html" class="btn btn-secondary">Começar</a>
+            </article>
+
+            <article class="price-card featured">
+              <span class="featured-badge">Mais popular</span>
+              <h3>Pro</h3>
+              <p class="price">R$ 29<span>/mês</span></p>
+              <ul>
+                <li>Projetos ilimitados</li>
+                <li>Colaboração em equipe</li>
+                <li>Relatórios e organização avançada</li>
+              </ul>
+              <a href="cadastro.html" class="btn btn-primary">Assinar</a>
+            </article>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Rodapé com direitos autorais e links auxiliares. -->
+    <footer class="footer">
+      <div class="container footer-inner">
+        <p>© 2026 KanbanFlow</p>
+        <div class="footer-links">
+          <a href="login.html">Login</a>
+          <a href="cadastro.html">Cadastro</a>
+        </div>
       </div>
-      <label for="task-title">Título da tarefa</label>
-      <input id="task-title" name="title" type="text" maxlength="100" placeholder="Ex.: Preparar contestação" required>
-      <label for="task-description">Descrição <span class="optional">(opcional)</span></label>
-      <textarea id="task-description" name="description" rows="3" maxlength="300" placeholder="Adicione detalhes sobre a tarefa"></textarea>
-      <div class="dialog-actions">
-        <button class="cancel-button" type="button" id="cancel-task-form">Cancelar</button>
-        <button class="add-task-button" id="task-submit" type="submit">Adicionar tarefa</button>
-      </div>
-    </form>
-  </dialog>
-</body>
+    </footer>
+  </body>
 </html>

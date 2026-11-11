@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<!-- Informa ao navegador que o documento usa HTML5. -->
+<!-- Define o idioma do conteúdo para navegação acessível e interpretação correta. -->
+<html lang="pt-BR">
+  <head>
+    <!-- Permite a exibição correta de caracteres especiais e acentuados. -->
+    <meta charset="UTF-8" />
+    <!-- Ajusta a largura e a escala para telas móveis. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Define o título da tela de cadastro na aba do navegador. -->
+    <title>KanbanFlow | Cadastro</title>
+    <!-- Carrega a identidade visual compartilhada do cabeçalho. -->
+    <link rel="stylesheet" href="site-header.css" />
+    <!-- Carrega os estilos compartilhados das telas de autenticação. -->
+    <link rel="stylesheet" href="auth.css" />
+    <!-- Carrega funções comuns, incluindo o botão de mostrar senha. -->
+    <script type="module" src="auth.js"></script>
+    <!-- Carrega as regras de validação e criação de conta. -->
+    <script type="module" src="cadastro.js"></script>
+  </head>
+  <!-- Marca a página para receber os estilos de autenticação e cadastro. -->
+  <body class="auth-page cadastro-page">
+    <!-- Cabeçalho comum com a marca e os links de navegação desta tela. -->
+    <header class="site-header">
+      <div class="site-header-inner">
+        <a class="site-brand" href="index.html" aria-label="KanbanFlow - página inicial">
+          <span class="site-brand-mark" aria-hidden="true">K</span>
+          <span>KanbanFlow</span>
+        </a>
+        <nav class="site-header-actions" aria-label="Navegação principal">
+          <a class="site-header-link" href="index.html">Início</a>
+          <a class="site-header-link site-header-link-primary" href="login.html">Entrar</a>
+        </nav>
+      </div>
+    </header>
+    <!-- Contêiner em duas áreas: apresentação e formulário de cadastro. -->
+    <div class="auth-shell cadastro-shell">
+      <!-- Painel lateral com a marca e uma prévia do quadro. -->
+      <aside class="auth-visual">
+        <h1>Comece hoje</h1>
+        <p>Crie sua conta e transforme ideias em tarefas organizadas, claras e produtivas.</p>
+
+        <!-- Exibe uma ilustração simplificada de tarefas no quadro. -->
+        <div class="mini-board" aria-label="Preview do quadro Kanban">
+          <div class="mini-column">
+            <span>Planejado</span>
+            <div class="mini-card green">Reunião</div>
+            <div class="mini-card blue">Todo #1</div>
+          </div>
+          <div class="mini-column">
+            <span>Pronto</span>
+            <div class="mini-card purple">Entrega final</div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Área principal que contém os dados necessários para criar a conta. -->
+      <main class="auth-card cadastro-card">
+        <!-- O cadastro.js valida e processa este formulário. -->
+        <form id="cadastroForm" novalidate>
+          <!-- Título e introdução do formulário. -->
+          <div class="auth-header">
+            <span class="eyebrow">Crie sua conta</span>
+            <h2>Cadastro</h2>
+          </div>
+
+          <!-- Campo para registrar o nome exibido na conta. -->
+          <label for="name">Nome completo</label>
+          <input id="name" name="name" type="text" placeholder="Seu nome" required />
+
+          <!-- Campo de e-mail validado pelo navegador e pelo JavaScript. -->
+          <label for="cadastroEmail">E-mail</label>
+          <input id="cadastroEmail" name="email" type="email" autocomplete="email" placeholder="seu@exemplo.com" required />
+
+          <!-- Campo para criar a senha, acompanhado do controle de visibilidade. -->
+          <label for="cadastroPassword">Senha</label>
+          <div class="password-field">
+            <input
+              id="cadastroPassword"
+              name="password"
+              type="password"
+              minlength="6"
+              placeholder="Mínimo 6 caracteres"
+              required
+            />
+            <button
+              type="button"
+              class="toggle-password"
+              data-password-toggle="cadastroPassword"
+              aria-label="Mostrar senha"
+            >
+              Mostrar
+            </button>
+          </div>
+
+          <!-- Caixa obrigatória para confirmar ciência sobre o tratamento de dados. -->
+          <label class="privacy-consent" for="lgpdConsent">
+            <input id="lgpdConsent" name="lgpdConsent" type="checkbox" required />
+            <span>Li e concordo com o tratamento dos meus dados pessoais conforme a LGPD.</span>
+          </label>
+
+          <!-- Envia os dados para validação e criação da conta. -->
+          <button type="submit" class="btn btn-primary btn-block">Cadastrar</button>
+
+          <!-- Região acessível usada para mensagens de erro ou sucesso. -->
+          <p class="form-message" id="formMessage" aria-live="polite"></p>
+
+          <!-- Link para usuários que já têm uma conta cadastrada. -->
+          <p class="auth-link">
+            Já tem conta?
+            <a href="login.html">Entrar</a>
+          </p>
+        </form>
+      </main>
+    </div>
+  </body>
+</html>
