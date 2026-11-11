@@ -1,0 +1,526 @@
+:root { /* Estilos do seletor :root. */
+  --ink: #263b3a; /* Configura --ink com valor #263b3a. */
+  --muted: #788684; /* Configura --muted com valor #788684. */
+  --line: #e5eae8; /* Configura --line com valor #e5eae8. */
+  --paper: #ffffff; /* Configura --paper com valor #ffffff. */
+  --canvas: #f5f7f6; /* Configura --canvas com valor #f5f7f6. */
+  --green: #2f6257; /* Configura --green com valor #2f6257. */
+  --green-dark: #244d45; /* Configura --green-dark com valor #244d45. */
+  --primary: #4f46e5; /* Configura --primary com valor #4f46e5. */
+  --primary-soft: rgba(79, 70, 229, 0.08); /* Configura --primary-soft com valor rgba(79, 70, 229, 0.08). */
+  --shadow: 0 10px 25px rgba(38, 59, 58, 0.08); /* Configura --shadow com valor 0 10px 25px rgba(38, 59, 58, 0.08). */
+}
+
+* { /* Estilos do seletor *. */
+  box-sizing: border-box; /* Configura box-sizing com valor border-box. */
+}
+
+body { /* Estilos do seletor body. */
+  min-width: 320px; /* Configura min-width com valor 320px. */
+  min-height: 100vh; /* Configura min-height com valor 100vh. */
+  min-height: 100dvh; /* Configura min-height com valor 100dvh. */
+  margin: 0; /* Configura margin com valor 0. */
+  background: linear-gradient(180deg, #f5f7fb 0%, #eef4f8 100%); /* Configura background com valor linear-gradient(180deg, #f5f7fb 0%, #eef4f8 100%). */
+  color: var(--ink); /* Configura color com valor var(--ink). */
+  font-family: Arial, Helvetica, sans-serif; /* Configura font-family com valor Arial, Helvetica, sans-serif. */
+  overflow-x: hidden; /* Configura overflow-x com valor hidden. */
+}
+
+button,
+input,
+textarea { /* Estilos do seletor textarea. */
+  font: inherit; /* Configura font com valor inherit. */
+}
+
+.app-shell { /* Estilos do seletor .app-shell. */
+  width: min(1540px, 100%); /* Configura width com valor min(1540px, 100%). */
+  margin: 0 auto; /* Configura margin com valor 0 auto. */
+  padding: 32px 24px 48px; /* Configura padding com valor 32px 24px 48px. */
+}
+
+.board-topbar { /* Estilos do seletor .board-topbar. */
+  display: flex; /* Configura display com valor flex. */
+  align-items: center; /* Configura align-items com valor center. */
+  justify-content: space-between; /* Configura justify-content com valor space-between. */
+  margin-bottom: 24px; /* Configura margin-bottom com valor 24px. */
+  gap: 16px; /* Configura gap com valor 16px. */
+}
+
+.board-status {
+  margin: 0 0 16px;
+  color: #53647a;
+  font-size: 0.9rem;
+}
+
+.board-status:empty {
+  display: none;
+}
+
+.board-status.is-error {
+  padding: 12px 14px;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+.board-heading h1 { /* Estilos do seletor .board-heading h1. */
+  margin: 0; /* Configura margin com valor 0. */
+  font-size: clamp(28px, 3vw, 40px); /* Configura font-size com valor clamp(28px, 3vw, 40px). */
+  color: #1f2937; /* Configura color com valor #1f2937. */
+  letter-spacing: -0.04em; /* Configura letter-spacing com valor -0.04em. */
+}
+
+.account-actions { /* Estilos do seletor .account-actions. */
+  display: inline-flex; /* Configura display com valor inline-flex. */
+  align-items: center; /* Configura align-items com valor center. */
+  gap: 10px; /* Configura gap com valor 10px. */
+}
+
+.board-user { /* Estilos do seletor .board-user. */
+  display: inline-flex; /* Configura display com valor inline-flex. */
+  align-items: center; /* Configura align-items com valor center. */
+  gap: 10px; /* Configura gap com valor 10px. */
+  padding: 10px 14px; /* Configura padding com valor 10px 14px. */
+  border-radius: 999px; /* Configura border-radius com valor 999px. */
+  background: rgba(79, 70, 229, 0.08); /* Configura background com valor rgba(79, 70, 229, 0.08). */
+  color: #3730a3; /* Configura color com valor #3730a3. */
+  font-weight: 700; /* Configura font-weight com valor 700. */
+}
+
+.board-user .avatar { /* Estilos do seletor .board-user .avatar. */
+  display: inline-grid; /* Configura display com valor inline-grid. */
+  place-items: center; /* Configura place-items com valor center. */
+  width: 26px; /* Configura width com valor 26px. */
+  height: 26px; /* Configura height com valor 26px. */
+  border-radius: 50%; /* Configura border-radius com valor 50%. */
+  background: linear-gradient(135deg, #8b5cf6, #60a5fa); /* Configura background com valor linear-gradient(135deg, #8b5cf6, #60a5fa). */
+  color: #fff; /* Configura color com valor #fff. */
+  font-size: 0.75rem; /* Configura font-size com valor 0.75rem. */
+}
+
+.account-button { /* Estilos do seletor .account-button. */
+  padding: 9px 12px; /* Configura padding com valor 9px 12px. */
+  border: 1px solid #dfe4f2; /* Configura border com valor 1px solid #dfe4f2. */
+  border-radius: 10px; /* Configura border-radius com valor 10px. */
+  background: #fff; /* Configura background com valor #fff. */
+  color: #3730a3; /* Configura color com valor #3730a3. */
+  cursor: pointer; /* Configura cursor com valor pointer. */
+  font-size: 0.82rem; /* Configura font-size com valor 0.82rem. */
+  font-weight: 700; /* Configura font-weight com valor 700. */
+}
+
+.account-button:hover { /* Estilos do seletor .account-button:hover. */
+  background: #eef2ff; /* Configura background com valor #eef2ff. */
+}
+
+.logout-button { /* Estilos do seletor .logout-button. */
+  color: #9f3a38; /* Configura color com valor #9f3a38. */
+}
+
+.logout-button:hover { /* Estilos do seletor .logout-button:hover. */
+  background: #fff1f0; /* Configura background com valor #fff1f0. */
+}
+
+.board { /* Estilos do seletor .board. */
+  display: grid; /* Configura display com valor grid. */
+  grid-template-columns: repeat(4, minmax(0, 1fr)); /* Configura grid-template-columns com valor repeat(4, minmax(0, 1fr)). */
+  align-items: start; /* Configura align-items com valor start. */
+  gap: 18px; /* Configura gap com valor 18px. */
+}
+
+.board-column { /* Estilos do seletor .board-column. */
+  min-width: 0; /* Configura min-width com valor 0. */
+  min-height: 360px; /* Configura min-height com valor 360px. */
+  padding: 0 12px 14px; /* Configura padding com valor 0 12px 14px. */
+  border: 1px solid #e8edeb; /* Configura border com valor 1px solid #e8edeb. */
+  border-radius: 18px; /* Configura border-radius com valor 18px. */
+  background: rgba(255, 255, 255, 0.8); /* Configura background com valor rgba(255, 255, 255, 0.8). */
+  box-shadow: var(--shadow); /* Configura box-shadow com valor var(--shadow). */
+  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease; /* Configura transition com valor transform 0.2s ease, background 0.2s ease, border-color 0.2s ease. */
+}
+
+.board-column.is-over { /* Estilos do seletor .board-column.is-over. */
+  border-color: rgba(79, 70, 229, 0.7); /* Configura border-color com valor rgba(79, 70, 229, 0.7). */
+  background: rgba(79, 70, 229, 0.04); /* Configura background com valor rgba(79, 70, 229, 0.04). */
+  transform: translateY(-1px); /* Configura transform com valor translateY(-1px). */
+}
+
+.column-header { /* Estilos do seletor .column-header. */
+  min-height: 56px; /* Configura min-height com valor 56px. */
+  display: flex; /* Configura display com valor flex. */
+  align-items: center; /* Configura align-items com valor center. */
+  justify-content: space-between; /* Configura justify-content com valor space-between. */
+  border-bottom: 1px solid var(--line); /* Configura border-bottom com valor 1px solid var(--line). */
+}
+
+.column-title-wrap { /* Estilos do seletor .column-title-wrap. */
+  display: flex; /* Configura display com valor flex. */
+  align-items: center; /* Configura align-items com valor center. */
+  gap: 9px; /* Configura gap com valor 9px. */
+}
+
+.column-title-wrap h2 { /* Estilos do seletor .column-title-wrap h2. */
+  margin: 0; /* Configura margin com valor 0. */
+  color: #425552; /* Configura color com valor #425552. */
+  font-size: 13px; /* Configura font-size com valor 13px. */
+  font-weight: 700; /* Configura font-weight com valor 700. */
+  letter-spacing: 0.03em; /* Configura letter-spacing com valor 0.03em. */
+  text-transform: uppercase; /* Configura text-transform com valor uppercase. */
+}
+
+.column-indicator { /* Estilos do seletor .column-indicator. */
+  width: 10px; /* Configura width com valor 10px. */
+  height: 10px; /* Configura height com valor 10px. */
+  flex: 0 0 10px; /* Configura flex com valor 0 0 10px. */
+  border-radius: 50%; /* Configura border-radius com valor 50%. */
+}
+
+.indicator-todo { /* Estilos do seletor .indicator-todo. */ background: #95a5a1; }
+.indicator-progress { /* Estilos do seletor .indicator-progress. */ background: #5ea5d7; }
+.indicator-review { /* Estilos do seletor .indicator-review. */ background: #d5a55b; }
+.indicator-done { /* Estilos do seletor .indicator-done. */ background: #4ca37b; }
+
+.task-count { /* Estilos do seletor .task-count. */
+  min-width: 26px; /* Configura min-width com valor 26px. */
+  height: 26px; /* Configura height com valor 26px. */
+  display: grid; /* Configura display com valor grid. */
+  place-items: center; /* Configura place-items com valor center. */
+  padding: 0 7px; /* Configura padding com valor 0 7px. */
+  border-radius: 8px; /* Configura border-radius com valor 8px. */
+  background: #edf2ff; /* Configura background com valor #edf2ff. */
+  color: #3a4d7a; /* Configura color com valor #3a4d7a. */
+  font-size: 12px; /* Configura font-size com valor 12px. */
+  font-weight: 700; /* Configura font-weight com valor 700. */
+}
+
+.column-add-task { /* Estilos do seletor .column-add-task. */
+  width: 100%; /* Configura width com valor 100%. */
+  min-height: 42px; /* Configura min-height com valor 42px. */
+  display: flex; /* Configura display com valor flex. */
+  align-items: center; /* Configura align-items com valor center. */
+  justify-content: center; /* Configura justify-content com valor center. */
+  gap: 8px; /* Configura gap com valor 8px. */
+  margin-top: 12px; /* Configura margin-top com valor 12px. */
+  padding: 0 12px; /* Configura padding com valor 0 12px. */
+  border: 1px dashed #c9d5f7; /* Configura border com valor 1px dashed #c9d5f7. */
+  border-radius: 12px; /* Configura border-radius com valor 12px. */
+  background: rgba(79, 70, 229, 0.03); /* Configura background com valor rgba(79, 70, 229, 0.03). */
+  color: #3d4f9f; /* Configura color com valor #3d4f9f. */
+  cursor: pointer; /* Configura cursor com valor pointer. */
+  font-size: 0.86rem; /* Configura font-size com valor 0.86rem. */
+  font-weight: 700; /* Configura font-weight com valor 700. */
+}
+
+.column-add-task:hover { /* Estilos do seletor .column-add-task:hover. */
+  border-color: rgba(79, 70, 229, 0.5); /* Configura border-color com valor rgba(79, 70, 229, 0.5). */
+  background: rgba(79, 70, 229, 0.07); /* Configura background com valor rgba(79, 70, 229, 0.07). */
+}
+
+.column-add-task:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.card-list { /* Estilos do seletor .card-list. */
+  min-height: 220px; /* Configura min-height com valor 220px. */
+  display: flex; /* Configura display com valor flex. */
+  flex-direction: column; /* Configura flex-direction com valor column. */
+  gap: 12px; /* Configura gap com valor 12px. */
+  padding-top: 12px; /* Configura padding-top com valor 12px. */
+}
+
+.task-card { /* Estilos do seletor .task-card. */
+  padding: 14px 14px 12px; /* Configura padding com valor 14px 14px 12px. */
+  border: 1px solid #edf0f5; /* Configura border com valor 1px solid #edf0f5. */
+  border-radius: 12px; /* Configura border-radius com valor 12px. */
+  background: linear-gradient(135deg, var(--primary), #6d5efc); /* Usa o mesmo degradê roxo do botão Entrar. */
+  color: #fff; /* Mantém o texto do cartão legível sobre o fundo roxo. */
+  box-shadow: 0 8px 18px rgba(79, 70, 229, 0.2); /* Adiciona profundidade com sombra roxa suave. */
+  cursor: grab; /* Configura cursor com valor grab. */
+  overflow-wrap: anywhere; /* Configura overflow-wrap com valor anywhere. */
+}
+
+.task-card:active { /* Estilos do seletor .task-card:active. */
+  cursor: grabbing; /* Configura cursor com valor grabbing. */
+}
+
+.task-card.is-dragging { /* Estilos do seletor .task-card.is-dragging. */
+  opacity: 0.5; /* Configura opacity com valor 0.5. */
+}
+
+.task-card h3 { /* Estilos do seletor .task-card h3. */
+  margin: 0; /* Configura margin com valor 0. */
+  color: #fff; /* Exibe o título em branco sobre o degradê roxo. */
+  font-size: 0.96rem; /* Configura font-size com valor 0.96rem. */
+  font-weight: 700; /* Configura font-weight com valor 700. */
+  line-height: 1.45; /* Configura line-height com valor 1.45. */
+}
+
+.task-description { /* Estilos do seletor .task-description. */
+  margin: 10px 0 0; /* Configura margin com valor 10px 0 0. */
+  color: rgba(255, 255, 255, 0.82); /* Mantém a descrição clara e legível. */
+  font-size: 0.8rem; /* Configura font-size com valor 0.8rem. */
+  line-height: 1.55; /* Configura line-height com valor 1.55. */
+}
+
+.task-actions { /* Estilos do seletor .task-actions. */
+  display: flex; /* Configura display com valor flex. */
+  justify-content: flex-end; /* Configura justify-content com valor flex-end. */
+  gap: 6px; /* Configura gap com valor 6px. */
+  margin-top: 12px; /* Configura margin-top com valor 12px. */
+  padding-top: 8px; /* Configura padding-top com valor 8px. */
+  border-top: 1px solid rgba(255, 255, 255, 0.24); /* Separa as ações com uma linha translúcida. */
+}
+
+.task-action-button { /* Estilos do seletor .task-action-button. */
+  padding: 6px 8px; /* Configura padding com valor 6px 8px. */
+  border: 0; /* Configura border com valor 0. */
+  border-radius: 8px; /* Configura border-radius com valor 8px. */
+  background: transparent; /* Configura background com valor transparent. */
+  color: #fff; /* Mantém os botões de ação legíveis no cartão roxo. */
+  cursor: pointer; /* Configura cursor com valor pointer. */
+  font-size: 0.73rem; /* Configura font-size com valor 0.73rem. */
+  font-weight: 700; /* Configura font-weight com valor 700. */
+}
+
+.task-action-button:hover { /* Estilos do seletor .task-action-button:hover. */
+  background: rgba(255, 255, 255, 0.16); /* Realça a ação sem esconder o fundo do cartão. */
+}
+
+.task-delete-button { /* Estilos do seletor .task-delete-button. */
+  color: #fff; /* Mantém o texto de exclusão legível no cartão roxo. */
+}
+
+.task-delete-button:hover { /* Estilos do seletor .task-delete-button:hover. */
+  background: rgba(255, 255, 255, 0.16); /* Realça a ação de exclusão de forma consistente. */
+}
+
+.task-dialog { /* Estilos do seletor .task-dialog. */
+  width: min(440px, calc(100% - 32px)); /* Configura width com valor min(440px, calc(100% - 32px)). */
+  max-height: min(90vh, 760px); /* Configura max-height com valor min(90vh, 760px). */
+  max-height: min(90dvh, 760px); /* Configura max-height com valor min(90dvh, 760px). */
+  overflow-y: auto; /* Configura overflow-y com valor auto. */
+  padding: 22px; /* Configura padding com valor 22px. */
+  border: 1px solid var(--line); /* Configura border com valor 1px solid var(--line). */
+  border-radius: 18px; /* Configura border-radius com valor 18px. */
+  background: var(--paper); /* Configura background com valor var(--paper). */
+  color: var(--ink); /* Configura color com valor var(--ink). */
+  box-shadow: 0 20px 70px rgba(31, 51, 47, 0.18); /* Configura box-shadow com valor 0 20px 70px rgba(31, 51, 47, 0.18). */
+}
+
+.task-dialog::backdrop { /* Estilos do seletor .task-dialog::backdrop. */
+  background: rgba(15, 23, 42, 0.45); /* Configura background com valor rgba(15, 23, 42, 0.45). */
+}
+
+.delete-dialog { /* Estilos do seletor .delete-dialog. */
+  width: min(420px, calc(100% - 32px)); /* Configura width com valor min(420px, calc(100% - 32px)). */
+}
+
+.delete-confirmation-message { /* Estilos do seletor .delete-confirmation-message. */
+  margin: 0; /* Configura margin com valor 0. */
+  color: #5f6f82; /* Configura color com valor #5f6f82. */
+  font-size: 0.95rem; /* Configura font-size com valor 0.95rem. */
+  line-height: 1.6; /* Configura line-height com valor 1.6. */
+  overflow-wrap: anywhere; /* Configura overflow-wrap com valor anywhere. */
+}
+
+.confirm-delete-button { /* Estilos do seletor .confirm-delete-button. */
+  border: 0; /* Configura border com valor 0. */
+  border-radius: 10px; /* Configura border-radius com valor 10px. */
+  padding: 0.8rem 1rem; /* Configura padding com valor 0.8rem 1rem. */
+  background: #b42318; /* Configura background com valor #b42318. */
+  color: #fff; /* Configura color com valor #fff. */
+  cursor: pointer; /* Configura cursor com valor pointer. */
+  font-weight: 700; /* Configura font-weight com valor 700. */
+}
+
+.confirm-delete-button:hover { /* Estilos do seletor .confirm-delete-button:hover. */
+  background: #912018; /* Configura background com valor #912018. */
+}
+
+.dialog-heading { /* Estilos do seletor .dialog-heading. */
+  display: flex; /* Configura display com valor flex. */
+  align-items: center; /* Configura align-items com valor center. */
+  justify-content: space-between; /* Configura justify-content com valor space-between. */
+  margin-bottom: 18px; /* Configura margin-bottom com valor 18px. */
+}
+
+.dialog-heading h2 { /* Estilos do seletor .dialog-heading h2. */
+  margin: 0; /* Configura margin com valor 0. */
+  font-size: 1.5rem; /* Configura font-size com valor 1.5rem. */
+}
+
+.close-dialog { /* Estilos do seletor .close-dialog. */
+  width: 34px; /* Configura width com valor 34px. */
+  height: 34px; /* Configura height com valor 34px. */
+  border: 1px solid #edf0f5; /* Configura border com valor 1px solid #edf0f5. */
+  border-radius: 10px; /* Configura border-radius com valor 10px. */
+  background: #f5f7ff; /* Configura background com valor #f5f7ff. */
+  color: #425052; /* Configura color com valor #425052. */
+  cursor: pointer; /* Configura cursor com valor pointer. */
+  font-size: 1.5rem; /* Configura font-size com valor 1.5rem. */
+}
+
+label { /* Estilos do seletor label. */
+  display: block; /* Configura display com valor block. */
+  margin-bottom: 8px; /* Configura margin-bottom com valor 8px. */
+  color: #334155; /* Configura color com valor #334155. */
+  font-size: 0.88rem; /* Configura font-size com valor 0.88rem. */
+  font-weight: 700; /* Configura font-weight com valor 700. */
+}
+
+input,
+textarea { /* Estilos do seletor textarea. */
+  width: 100%; /* Configura width com valor 100%. */
+  margin-bottom: 14px; /* Configura margin-bottom com valor 14px. */
+  padding: 0.8rem 0.9rem; /* Configura padding com valor 0.8rem 0.9rem. */
+  border: 1px solid var(--line); /* Configura border com valor 1px solid var(--line). */
+  border-radius: 10px; /* Configura border-radius com valor 10px. */
+  background: #fff; /* Configura background com valor #fff. */
+  color: var(--ink); /* Configura color com valor var(--ink). */
+}
+
+input:focus,
+textarea:focus { /* Estilos do seletor textarea:focus. */
+  outline: none; /* Configura outline com valor none. */
+  border-color: rgba(79, 70, 229, 0.8); /* Configura border-color com valor rgba(79, 70, 229, 0.8). */
+  box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.08); /* Configura box-shadow com valor 0 0 0 4px rgba(79, 70, 229, 0.08). */
+}
+
+.account-password-field {
+  position: relative;
+}
+
+.account-password-field input {
+  padding-right: 88px;
+}
+
+.account-password-toggle {
+  position: absolute;
+  top: 0;
+  right: 8px;
+  min-height: 42px;
+  padding: 0 8px;
+  border: 0;
+  background: transparent;
+  color: var(--primary);
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.account-password-toggle:hover {
+  color: #3730a3;
+}
+
+textarea { /* Estilos do seletor textarea. */
+  resize: vertical; /* Configura resize com valor vertical. */
+  min-height: 90px; /* Configura min-height com valor 90px. */
+}
+
+.dialog-actions { /* Estilos do seletor .dialog-actions. */
+  display: flex; /* Configura display com valor flex. */
+  justify-content: flex-end; /* Configura justify-content com valor flex-end. */
+  gap: 10px; /* Configura gap com valor 10px. */
+  margin-top: 10px; /* Configura margin-top com valor 10px. */
+}
+
+.account-message { /* Estilos do seletor .account-message. */
+  min-height: 20px; /* Configura min-height com valor 20px. */
+  margin: 0; /* Configura margin com valor 0. */
+  color: #b42318; /* Configura color com valor #b42318. */
+  font-size: 0.85rem; /* Configura font-size com valor 0.85rem. */
+}
+
+.optional { /* Estilos do seletor .optional. */
+  color: var(--muted); /* Configura color com valor var(--muted). */
+  font-weight: 400; /* Configura font-weight com valor 400. */
+}
+
+.cancel-button,
+.add-task-button { /* Estilos do seletor .add-task-button. */
+  border: 0; /* Configura border com valor 0. */
+  border-radius: 10px; /* Configura border-radius com valor 10px. */
+  padding: 0.8rem 1rem; /* Configura padding com valor 0.8rem 1rem. */
+  cursor: pointer; /* Configura cursor com valor pointer. */
+  font-weight: 700; /* Configura font-weight com valor 700. */
+}
+
+.cancel-button { /* Estilos do seletor .cancel-button. */
+  background: #edf2f7; /* Configura background com valor #edf2f7. */
+  color: #334155; /* Configura color com valor #334155. */
+}
+
+.add-task-button { /* Estilos do seletor .add-task-button. */
+  background: linear-gradient(135deg, #4f46e5, #6366f1); /* Configura background com valor linear-gradient(135deg, #4f46e5, #6366f1). */
+  color: #fff; /* Configura color com valor #fff. */
+}
+
+.sr-only { /* Estilos do seletor .sr-only. */
+  position: absolute; /* Configura position com valor absolute. */
+  width: 1px; /* Configura width com valor 1px. */
+  height: 1px; /* Configura height com valor 1px. */
+  padding: 0; /* Configura padding com valor 0. */
+  margin: -1px; /* Configura margin com valor -1px. */
+  overflow: hidden; /* Configura overflow com valor hidden. */
+  clip: rect(0, 0, 0, 0); /* Configura clip com valor rect(0, 0, 0, 0). */
+  white-space: nowrap; /* Configura white-space com valor nowrap. */
+  border-width: 0; /* Configura border-width com valor 0. */
+}
+
+@media (max-width: 980px) { /* Regras responsivas aplicadas neste ponto. */
+  .board { /* Estilos do seletor .board. */
+    grid-template-columns: repeat(2, minmax(0, 1fr)); /* Configura grid-template-columns com valor repeat(2, minmax(0, 1fr)). */
+  }
+}
+
+@media (max-width: 640px) { /* Regras responsivas aplicadas neste ponto. */
+  .app-shell { /* Estilos do seletor .app-shell. */
+    padding: 22px 14px 32px; /* Configura padding com valor 22px 14px 32px. */
+  }
+
+  .board { /* Estilos do seletor .board. */
+    grid-template-columns: 1fr; /* Configura grid-template-columns com valor 1fr. */
+  }
+
+  .board-topbar { /* Estilos do seletor .board-topbar. */
+    flex-direction: column; /* Configura flex-direction com valor column. */
+    align-items: flex-start; /* Configura align-items com valor flex-start. */
+    gap: 14px; /* Configura gap com valor 14px. */
+  }
+
+  .account-actions { /* Estilos do seletor .account-actions. */
+    width: 100%; /* Configura width com valor 100%. */
+    flex-wrap: wrap; /* Configura flex-wrap com valor wrap. */
+  }
+
+  .board-user { /* Estilos do seletor .board-user. */
+    max-width: 100%; /* Configura max-width com valor 100%. */
+  }
+}
+
+@media (max-width: 420px) { /* Regras responsivas aplicadas neste ponto. */
+  .account-actions { /* Estilos do seletor .account-actions. */
+    display: grid; /* Configura display com valor grid. */
+    grid-template-columns: 1fr 1fr; /* Configura grid-template-columns com valor 1fr 1fr. */
+  }
+
+  .board-user { /* Estilos do seletor .board-user. */
+    grid-column: 1 / -1; /* Configura grid-column com valor 1 / -1. */
+    justify-self: start; /* Configura justify-self com valor start. */
+  }
+
+  .account-button { /* Estilos do seletor .account-button. */
+    min-height: 42px; /* Configura min-height com valor 42px. */
+  }
+
+  .dialog-actions { /* Estilos do seletor .dialog-actions. */
+    flex-direction: column-reverse; /* Configura flex-direction com valor column-reverse. */
+  }
+
+  .dialog-actions button { /* Estilos do seletor .dialog-actions button. */
+    width: 100%; /* Configura width com valor 100%. */
+    min-height: 44px; /* Configura min-height com valor 44px. */
+  }
+}

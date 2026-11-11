@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<!-- Informa ao navegador que o documento usa HTML5. -->
+<!-- Define o idioma do quadro para tecnologias assistivas. -->
+<html lang="pt-BR">
+<head>
+  <!-- Define a codificação usada para os textos e caracteres especiais. -->
+  <meta charset="UTF-8">
+  <!-- Configura o layout para se adaptar à largura da tela. -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Define a cor sugerida para a interface do navegador em dispositivos móveis. -->
+  <meta name="theme-color" content="#f5f7f8">
+  <!-- Define o título da página do quadro. -->
+  <title>Quadro Kanban</title>
+  <!-- Carrega a identidade visual compartilhada do cabeçalho. -->
+  <link rel="stylesheet" href="site-header.css">
+  <!-- Carrega os estilos específicos da página do quadro. -->
+  <link rel="stylesheet" href="board.css">
+  <!-- Carrega as funções de tarefas, conta e sessão depois da leitura do HTML. -->
+  <script type="module" src="board.js"></script>
+  <!-- Evita a solicitação de um ícone padrão que não existe. -->
+  <link rel="icon" href="data:,">
+</head>
+<body>
+  <!-- Cabeçalho comum com a marca e os controles da conta autenticada. -->
+  <header class="site-header">
+    <div class="site-header-inner">
+      <a class="site-brand" href="index.html" aria-label="KanbanFlow - página inicial">
+        <span class="site-brand-mark" aria-hidden="true">K</span>
+        <span>KanbanFlow</span>
+      </a>
+      <div class="site-header-actions">
+        <div class="board-user" aria-label="Usuário autenticado">
+          <span class="avatar" id="userAvatar">U</span>
+          <span id="userName">Usuário</span>
+        </div>
+        <button class="site-header-button" type="button" id="edit-account-button">Editar conta</button>
+        <button class="site-header-button site-header-button-logout" type="button" id="logout-button">Sair</button>
+      </div>
+    </div>
+  </header>
+  <!-- Limita a largura do conteúdo e organiza as áreas principais do quadro. -->
+  <main class="app-shell">
+    <!-- Exibe o título principal da área de tarefas. -->
+    <section class="board-topbar" aria-labelledby="page-title">
+      <div class="board-heading">
+        <h1 id="page-title">Quadro de tarefas</h1>
+      </div>
+    </section>
+
+    <!-- Organiza as tarefas em colunas identificadas pelo status correspondente. -->
+    <section class="board" aria-label="Quadro Kanban de tarefas">
+      <!-- Coluna para tarefas ainda não iniciadas. -->
+      <section class="board-column" data-status="todo" aria-labelledby="heading-todo">
+        <header class="column-header">
+          <div class="column-title-wrap"><span class="column-indicator indicator-todo"></span><h2 id="heading-todo">A fazer</h2></div>
+          <span class="task-count" aria-label="0 tarefas">0</span>
+        </header>
+        <button class="column-add-task" type="button" data-status="todo" disabled><span aria-hidden="true">+</span> Nova Tarefa</button>
+        <div class="card-list" aria-label="Tarefas a fazer"></div>
+      </section>
+
+      <!-- Coluna para tarefas que estão sendo executadas. -->
+      <section class="board-column" data-status="progress" aria-labelledby="heading-progress">
+        <header class="column-header">
+          <div class="column-title-wrap"><span class="column-indicator indicator-progress"></span><h2 id="heading-progress">Em andamento</h2></div>
+          <span class="task-count" aria-label="0 tarefas">0</span>
+        </header>
+        <button class="column-add-task" type="button" data-status="progress" disabled><span aria-hidden="true">+</span> Nova Tarefa</button>
+        <div class="card-list" aria-label="Tarefas em andamento"></div>
+      </section>
+
+      <!-- Coluna para tarefas aguardando revisão. -->
+      <section class="board-column" data-status="review" aria-labelledby="heading-review">
+        <header class="column-header">
+          <div class="column-title-wrap"><span class="column-indicator indicator-review"></span><h2 id="heading-review">Em revisão</h2></div>
+          <span class="task-count" aria-label="0 tarefas">0</span>
+        </header>
+        <button class="column-add-task" type="button" data-status="review" disabled><span aria-hidden="true">+</span> Nova Tarefa</button>
+        <div class="card-list" aria-label="Tarefas em revisão"></div>
+      </section>
+
+      <!-- Coluna para tarefas concluídas. -->
+      <section class="board-column" data-status="done" aria-labelledby="heading-done">
+        <header class="column-header">
+          <div class="column-title-wrap"><span class="column-indicator indicator-done"></span><h2 id="heading-done">Concluído</h2></div>
+          <span class="task-count" aria-label="0 tarefas">0</span>
+        </header>
+        <button class="column-add-task" type="button" data-status="done" disabled><span aria-hidden="true">+</span> Nova Tarefa</button>
+        <div class="card-list" aria-label="Tarefas concluídas"></div>
+      </section>
+    </section>
+    <!-- Mostra o estado da conexão e eventuais erros do Firebase de forma visível. -->
+    <p class="board-status" id="board-status" role="status" aria-live="polite">Conectando ao Firebase...</p>
+    <!-- Anuncia alterações do quadro para leitores de tela sem interferir na visualização. -->
+    <p class="sr-only" id="board-announcement" aria-live="polite"></p>
+  </main>
+
+  <!-- Janela modal reutilizada para adicionar e editar tarefas. -->
+  <dialog class="task-dialog" id="task-dialog" aria-labelledby="dialog-title">
+    <form id="task-form">
+      <div class="dialog-heading">
+        <div>
+          <h2 id="dialog-title">Adicionar tarefa</h2>
+        </div>
+        <button class="close-dialog" type="button" id="close-task-form" aria-label="Fechar">×</button>
+      </div>
+      <!-- Campo obrigatório que identifica a tarefa no cartão. -->
+      <label for="task-title">Título da tarefa</label>
+      <input id="task-title" name="title" type="text" maxlength="100" placeholder="Ex.: Preparar contestação" required>
+      <!-- Campo opcional para registrar detalhes da tarefa. -->
+      <label for="task-description">Descrição <span class="optional">(opcional)</span></label>
+      <textarea id="task-description" name="description" rows="3" maxlength="300" placeholder="Adicione detalhes sobre a tarefa"></textarea>
+      <div class="dialog-actions">
+        <button class="cancel-button" type="button" id="cancel-task-form">Cancelar</button>
+        <button class="add-task-button" id="task-submit" type="submit">Adicionar tarefa</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Janela modal para editar nome, e-mail ou senha da conta atual. -->
+  <dialog class="task-dialog" id="account-dialog" aria-labelledby="account-dialog-title">
+    <form id="account-form">
+      <div class="dialog-heading">
+        <h2 id="account-dialog-title">Editar conta</h2>
+        <button class="close-dialog" type="button" id="close-account-dialog" aria-label="Fechar">×</button>
+      </div>
+      <label for="account-name">Nome</label>
+      <input id="account-name" name="name" type="text" maxlength="100" required>
+      <label for="account-email">E-mail</label>
+      <input id="account-email" name="email" type="email" maxlength="254" required>
+      <!-- Solicita a senha antiga somente quando o usuário for definir uma nova. -->
+      <label for="account-current-password">Senha atual <span class="optional">(necessária para trocar a senha)</span></label>
+      <div class="account-password-field">
+        <input id="account-current-password" name="currentPassword" type="password" autocomplete="current-password" placeholder="Informe sua senha atual">
+        <button type="button" class="account-password-toggle" data-password-toggle="account-current-password" aria-label="Mostrar senha atual">Mostrar</button>
+      </div>
+      <!-- Senha nova em branco mantém a senha atualmente cadastrada. -->
+      <label for="account-password">Nova senha <span class="optional">(opcional)</span></label>
+      <div class="account-password-field">
+        <input id="account-password" name="password" type="password" autocomplete="new-password" minlength="6" placeholder="Deixe em branco para manter a senha atual">
+        <button type="button" class="account-password-toggle" data-password-toggle="account-password" aria-label="Mostrar nova senha">Mostrar</button>
+      </div>
+      <p class="account-message" id="account-message" aria-live="polite"></p>
+      <div class="dialog-actions">
+        <button class="cancel-button" type="button" id="cancel-account-edit">Cancelar</button>
+        <button class="add-task-button" type="submit">Salvar alterações</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Confirmação estilizada antes de remover definitivamente uma tarefa. -->
+  <dialog class="task-dialog delete-dialog" id="delete-dialog" aria-labelledby="delete-dialog-title">
+    <div class="dialog-heading">
+      <h2 id="delete-dialog-title">Excluir tarefa?</h2>
+      <button class="close-dialog" type="button" id="close-delete-dialog" aria-label="Fechar">×</button>
+    </div>
+    <!-- Texto preenchido pelo JavaScript com o nome da tarefa a excluir. -->
+    <p class="delete-confirmation-message" id="delete-confirmation-message"></p>
+    <div class="dialog-actions">
+      <button class="cancel-button" type="button" id="cancel-delete">Cancelar</button>
+      <button class="confirm-delete-button" type="button" id="confirm-delete">Excluir tarefa</button>
+    </div>
+  </dialog>
+</body>
+</html>

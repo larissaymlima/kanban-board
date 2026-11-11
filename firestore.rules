@@ -1,0 +1,14 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId} {
+      // Somente o usuário autenticado pode acessar seus dados de perfil.
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+
+      match /tasks/{taskId} {
+        // As tarefas ficam sob o UID do dono e não podem ser acessadas por outros usuários.
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+    }
+  }
+}
