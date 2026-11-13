@@ -1,7 +1,7 @@
 // Importa os serviços Firebase compartilhados pelos módulos do site.
 import { auth } from "./firebase-config.js";
 // Importa o observador de sessão do Firebase Authentication.
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 // Exibe uma mensagem junto ao formulário e aplica sua classe visual.
 export function setMessage(element, text, type = "error") {
@@ -12,10 +12,21 @@ export function setMessage(element, text, type = "error") {
 }
 
 // Redireciona para o quadro quando o Firebase confirma uma sessão válida.
-export function redirectIfAuthenticated(targetPage = "board.html") {
+export function getPostLoginUrl() {
+  // Aceita somente rotas locais conhecidas para impedir redirecionamentos externos.
+  const returnUrl = sessionStorage.getItem("trilha-return-url");
+  if (returnUrl && /^(task|board)\.html\?/.test(returnUrl)) {
+    sessionStorage.removeItem("trilha-return-url");
+    return returnUrl;
+  }
+  return "board.html";
+}
+
+// Redireciona para o destino solicitado depois que o Firebase confirma a sessão.
+export function redirectIfAuthenticated(targetPage) {
   const unsubscribe = onAuthStateChanged(auth, (user) => {
     unsubscribe();
-    if (user) window.location.replace(targetPage);
+    if (user) window.location.replace(targetPage || getPostLoginUrl());
   });
 }
 

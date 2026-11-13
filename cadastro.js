@@ -1,18 +1,18 @@
 // Importa os serviços Firebase e as funções compartilhadas de autenticação.
 import { auth, db } from "./firebase-config.js";
-import { getAuthErrorMessage, redirectIfAuthenticated, setMessage } from "./auth.js";
+import { getAuthErrorMessage, getPostLoginUrl, redirectIfAuthenticated, setMessage } from "./auth.js";
 // Importa as operações de criação de conta e atualização de perfil.
 import {
   createUserWithEmailAndPassword,
   deleteUser,
   updateProfile
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 // Importa as operações Firestore para gravar perfil e consentimento LGPD.
 import {
   doc,
   serverTimestamp,
   setDoc
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 // Redireciona quem já está autenticado e prepara os campos do cadastro.
 redirectIfAuthenticated();
@@ -69,7 +69,7 @@ if (form && message && emailInput && consentInput) {
       });
 
       setMessage(message, "Cadastro realizado com sucesso. Abrindo seu quadro...", "success");
-      window.location.replace("board.html");
+      window.location.replace(getPostLoginUrl());
     } catch (error) {
       console.error("Erro ao criar conta ou salvar perfil no Firebase:", error);
 

@@ -10,11 +10,13 @@
   <!-- Define a cor sugerida para a interface do navegador em dispositivos móveis. -->
   <meta name="theme-color" content="#f5f7f8">
   <!-- Define o título da página do quadro. -->
-  <title>Quadro Kanban</title>
+  <title>Quadro | Trilha</title>
   <!-- Carrega a identidade visual compartilhada do cabeçalho. -->
   <link rel="stylesheet" href="site-header.css">
   <!-- Carrega os estilos específicos da página do quadro. -->
   <link rel="stylesheet" href="board.css">
+  <!-- Compartilha a preferência de tema com a página da tarefa. -->
+  <script type="module" src="theme.js"></script>
   <!-- Carrega as funções de tarefas, conta e sessão depois da leitura do HTML. -->
   <script type="module" src="board.js"></script>
   <!-- Evita a solicitação de um ícone padrão que não existe. -->
@@ -24,11 +26,13 @@
   <!-- Cabeçalho comum com a marca e os controles da conta autenticada. -->
   <header class="site-header">
     <div class="site-header-inner">
-      <a class="site-brand" href="index.html" aria-label="KanbanFlow - página inicial">
-        <span class="site-brand-mark" aria-hidden="true">K</span>
-        <span>KanbanFlow</span>
+      <a class="site-brand" href="index.html" aria-label="Trilha - página inicial">
+        <span class="site-brand-mark" aria-hidden="true">T</span>
+        <span>Trilha</span>
       </a>
       <div class="site-header-actions">
+        <button class="site-header-button" type="button" data-theme-toggle aria-pressed="false">Tema escuro</button>
+        <button class="site-header-button" type="button" id="share-board-button" hidden>Compartilhar</button>
         <div class="board-user" aria-label="Usuário autenticado">
           <span class="avatar" id="userAvatar">U</span>
           <span id="userName">Usuário</span>
@@ -160,6 +164,30 @@
       <button class="cancel-button" type="button" id="cancel-delete">Cancelar</button>
       <button class="confirm-delete-button" type="button" id="confirm-delete">Excluir tarefa</button>
     </div>
+  </dialog>
+
+  <!-- Janela exclusiva do proprietário para conceder papéis a membros do quadro. -->
+  <dialog class="task-dialog member-dialog" id="member-dialog" aria-labelledby="member-dialog-title">
+    <form id="member-form">
+      <div class="dialog-heading">
+        <h2 id="member-dialog-title">Compartilhar quadro</h2>
+        <button class="close-dialog" type="button" id="close-member-dialog" aria-label="Fechar">×</button>
+      </div>
+      <label for="member-uid">UID Firebase da pessoa</label>
+      <input id="member-uid" name="uid" type="text" maxlength="128" autocomplete="off" required>
+      <label for="member-name">Nome para exibição</label>
+      <input id="member-name" name="name" type="text" maxlength="100" required>
+      <label for="member-role">Papel no quadro</label>
+      <select id="member-role" name="role">
+        <option value="EDITOR">Editor</option>
+        <option value="VIEWER">Leitor</option>
+      </select>
+      <p class="member-message" id="member-message" role="status" aria-live="polite"></p>
+      <div class="dialog-actions">
+        <button class="cancel-button" type="button" id="cancel-member-dialog">Cancelar</button>
+        <button class="add-task-button" type="submit">Conceder acesso</button>
+      </div>
+    </form>
   </dialog>
 </body>
 </html>

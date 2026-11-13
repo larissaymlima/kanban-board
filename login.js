@@ -1,8 +1,8 @@
 // Importa os serviços Firebase e utilitários compartilhados de autenticação.
 import { auth } from "./firebase-config.js";
-import { getAuthErrorMessage, redirectIfAuthenticated, setMessage } from "./auth.js";
+import { getAuthErrorMessage, getPostLoginUrl, redirectIfAuthenticated, setMessage } from "./auth.js";
 // Importa a operação de login por e-mail e senha.
-import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 // Redireciona usuários com sessão ativa e configura o formulário de login.
 redirectIfAuthenticated();
@@ -28,7 +28,7 @@ if (form && message) {
     try {
       await signInWithEmailAndPassword(auth, email, password);
       setMessage(message, "Login realizado com sucesso. Abrindo seu quadro...", "success");
-      window.location.replace("board.html");
+      window.location.replace(getPostLoginUrl());
     } catch (error) {
       console.error("Erro ao entrar com Firebase Authentication:", error);
       setMessage(message, getAuthErrorMessage(error), "error");

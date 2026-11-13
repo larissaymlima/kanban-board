@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<!-- Define uma página acessível em português para consultar e editar uma tarefa. -->
+<html lang="pt-BR">
+<head>
+  <!-- Define codificação, escala móvel e cores da página. -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f5f7fb">
+  <title>Tarefa | Trilha</title>
+  <!-- Reaproveita a identidade visual e os componentes do quadro. -->
+  <link rel="stylesheet" href="site-header.css">
+  <link rel="stylesheet" href="board.css">
+  <link rel="stylesheet" href="style.css">
+  <!-- Inicializa a preferência de tema antes da página ser exibida. -->
+  <script type="module" src="theme.js"></script>
+  <script type="module" src="task.js"></script>
+  <link rel="icon" href="data:,">
+</head>
+<body class="task-page">
+  <!-- Mantém a marca e controles principais consistentes com o quadro. -->
+  <header class="site-header">
+    <div class="site-header-inner">
+      <a class="site-brand" href="index.html" aria-label="Trilha - página inicial">
+        <span class="site-brand-mark" aria-hidden="true">T</span>
+        <span>Trilha</span>
+      </a>
+      <nav class="site-header-actions" aria-label="Ações da página">
+        <button class="site-header-button" type="button" data-theme-toggle aria-pressed="false">Tema escuro</button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Apresenta tarefa, formulário e comentários em uma coluna responsiva. -->
+  <main class="task-shell">
+    <a class="task-back-link" id="back-to-board" href="index.html">← Voltar ao quadro</a>
+    <p class="task-status" id="task-status" role="status" aria-live="polite">Conectando ao Firebase...</p>
+
+    <!-- Os campos são preenchidos pelo snapshot e bloqueados para leitores. -->
+    <form class="task-editor" id="task-form">
+      <fieldset id="task-fields" disabled>
+        <legend class="sr-only">Detalhes da tarefa</legend>
+        <label for="task-title">Título</label>
+        <input id="task-title" name="title" type="text" maxlength="160" required>
+
+        <label for="task-description">Descrição</label>
+        <textarea id="task-description" name="description" rows="5" maxlength="5000"></textarea>
+
+        <div class="task-form-grid">
+          <div>
+            <label for="task-status-field">Status</label>
+            <select id="task-status-field" name="status">
+              <option value="todo">A Fazer</option>
+              <option value="progress">Em Andamento</option>
+              <option value="review">Em Revisão</option>
+              <option value="done">Concluído</option>
+            </select>
+          </div>
+          <div>
+            <label for="task-assignee">Responsável</label>
+            <select id="task-assignee" name="assignee"></select>
+          </div>
+          <div>
+            <label for="task-due-date">Prazo</label>
+            <input id="task-due-date" name="dueDate" type="date">
+          </div>
+          <div>
+            <label for="task-priority">Prioridade</label>
+            <select id="task-priority" name="priority">
+              <option value="baixa">Baixa</option>
+              <option value="média">Média</option>
+              <option value="alta">Alta</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Permite incluir labels digitadas ou sugestões sem inserir HTML dinâmico. -->
+        <section class="task-subsection" aria-labelledby="labels-heading">
+          <h2 id="labels-heading">Labels</h2>
+          <div class="task-inline-form">
+            <label class="sr-only" for="label-input">Nova label</label>
+            <input id="label-input" type="text" maxlength="32" placeholder="Digite uma label">
+            <button class="btn btn-secondary" id="add-label" type="button">Adicionar</button>
+          </div>
+          <div class="task-suggestions" aria-label="Sugestões de labels">
+            <button type="button" data-label-suggestion="bug">bug</button>
+            <button type="button" data-label-suggestion="feature">feature</button>
+            <button type="button" data-label-suggestion="urgente">urgente</button>
+          </div>
+          <ul class="task-chip-list" id="task-labels" aria-label="Labels adicionadas"></ul>
+        </section>
+
+        <!-- Mantém cada item do checklist como texto e estado booleano. -->
+        <section class="task-subsection" aria-labelledby="checklist-heading">
+          <h2 id="checklist-heading">Checklist</h2>
+          <div class="task-inline-form">
+            <label class="sr-only" for="checklist-input">Novo item do checklist</label>
+            <input id="checklist-input" type="text" maxlength="200" placeholder="Descreva um item">
+            <button class="btn btn-secondary" id="add-checklist-item" type="button">Adicionar</button>
+          </div>
+          <progress id="checklist-progress" max="1" value="0">0%</progress>
+          <span id="checklist-count" class="checklist-count">0/0</span>
+          <ul class="task-checklist" id="task-checklist"></ul>
+        </section>
+      </fieldset>
+      <button class="btn btn-primary task-save-button" id="save-task" type="submit" hidden>Salvar alterações</button>
+    </form>
+
+    <!-- Exibe comentários em ordem cronológica e disponibiliza escrita a editores. -->
+    <section class="task-comments" id="comments-section" aria-labelledby="comments-heading">
+      <h2 id="comments-heading">Comentários</h2>
+      <ol class="comment-list" id="comment-list" aria-live="polite"></ol>
+      <form class="comment-form" id="comment-form">
+        <label for="comment-text">Adicionar comentário</label>
+        <textarea id="comment-text" name="comment" rows="3" maxlength="2000" required></textarea>
+        <button class="btn btn-primary" type="submit">Comentar</button>
+      </form>
+    </section>
+  </main>
+
+  <!-- Fornece retorno imediato acessível após salvar ou comentar. -->
+  <div class="task-toast" id="task-toast" role="status" aria-live="polite" hidden></div>
+</body>
+</html>

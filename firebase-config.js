@@ -1,10 +1,10 @@
 
 // Importa a função que inicializa o aplicativo Firebase.
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 // Importa a função que conecta o módulo de autenticação Firebase.
-import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 // Importa a função que conecta o banco de dados Firestore.
-import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 // Reúne os identificadores públicos necessários para conectar o app web ao projeto Firebase.
 const firebaseConfig = {

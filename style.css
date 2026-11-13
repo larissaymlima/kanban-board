@@ -597,6 +597,329 @@ a { /* Estilos do seletor a. */
     justify-items: center; /* Configura justify-items com valor center. */
   }
 
+  /* Ajusta a página da tarefa às cores compartilhadas e ao tema escolhido. */
+  .task-page {
+    min-height: 100vh;
+    padding-top: 82px;
+    background: var(--bg, #f5f7fb);
+    color: var(--text, #1f2937);
+  }
+
+  .task-shell {
+    width: min(100% - 32px, 880px);
+    margin: 32px auto 64px;
+  }
+
+  .task-back-link {
+    display: inline-block;
+    margin-bottom: 18px;
+    color: var(--primary, #4f46e5);
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .task-back-link:hover,
+  .task-back-link:focus-visible {
+    text-decoration: underline;
+  }
+
+  .task-status {
+    min-height: 1.4em;
+    color: var(--muted, #64748b);
+  }
+
+  .task-status.is-error {
+    padding: 12px;
+    border: 1px solid #fecaca;
+    border-radius: 10px;
+    background: #fef2f2;
+    color: #991b1b;
+  }
+
+  .task-editor,
+  .task-comments {
+    margin-top: 22px;
+    padding: clamp(18px, 4vw, 32px);
+    border: 1px solid var(--line, #dbe3ef);
+    border-radius: 18px;
+    background: var(--panel, #fff);
+    box-shadow: 0 12px 32px rgba(15, 23, 42, 0.07);
+  }
+
+  .task-editor fieldset {
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  .task-editor label,
+  .comment-form label {
+    display: block;
+    margin: 0 0 7px;
+    color: var(--text, #1f2937);
+    font-size: 0.92rem;
+    font-weight: 700;
+  }
+
+  .task-editor input,
+  .task-editor textarea,
+  .task-editor select,
+  .comment-form textarea {
+    width: 100%;
+    min-height: 44px;
+    padding: 10px 12px;
+    border: 1px solid var(--line, #dbe3ef);
+    border-radius: 10px;
+    background: var(--panel, #fff);
+    color: var(--text, #1f2937);
+    font: inherit;
+  }
+
+  .task-editor textarea,
+  .comment-form textarea {
+    resize: vertical;
+  }
+
+  .task-editor input:focus-visible,
+  .task-editor textarea:focus-visible,
+  .task-editor select:focus-visible,
+  .comment-form textarea:focus-visible,
+  .task-page button:focus-visible,
+  .task-page a:focus-visible {
+    outline: 3px solid rgba(79, 70, 229, 0.35);
+    outline-offset: 2px;
+  }
+
+  .task-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+    margin-top: 18px;
+  }
+
+  .task-subsection {
+    margin-top: 28px;
+  }
+
+  .task-subsection h2,
+  .task-comments h2 {
+    margin: 0 0 14px;
+    font-size: 1.2rem;
+  }
+
+  .task-inline-form {
+    display: flex;
+    gap: 10px;
+  }
+
+  .task-inline-form input {
+    min-width: 0;
+  }
+
+  .task-suggestions,
+  .task-chip-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 12px 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .task-suggestions button,
+  .task-chip-list button {
+    border: 0;
+    border-radius: 999px;
+    background: var(--panel-soft, #eef4ff);
+    color: var(--primary-dark, #3730a3);
+    cursor: pointer;
+    font: inherit;
+    font-weight: 700;
+    padding: 7px 11px;
+  }
+
+  .task-label-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    border-radius: 999px;
+    background: var(--panel-soft, #eef4ff);
+    color: var(--primary-dark, #3730a3);
+    font-size: 0.85rem;
+    font-weight: 700;
+    padding: 6px 10px;
+  }
+
+  .task-chip-list .task-label-chip button {
+    padding: 0 3px;
+    font-size: 1.1rem;
+  }
+
+  .task-checklist {
+    display: grid;
+    gap: 8px;
+    margin: 12px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .task-checklist li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    padding: 10px;
+    border: 1px solid var(--line, #dbe3ef);
+    border-radius: 10px;
+  }
+
+  .task-checklist li > span {
+    flex: 1;
+    overflow-wrap: anywhere;
+  }
+
+  .task-checklist input[type="checkbox"] {
+    width: 18px;
+    min-height: 18px;
+    flex: 0 0 auto;
+  }
+
+  .task-checklist .is-complete {
+    color: var(--muted, #64748b);
+    text-decoration: line-through;
+  }
+
+  .task-checklist li button {
+    border: 0;
+    background: transparent;
+    color: #b42318;
+    cursor: pointer;
+    font: inherit;
+  }
+
+  #checklist-progress {
+    width: min(78%, 560px);
+    height: 12px;
+    vertical-align: middle;
+    accent-color: var(--primary, #4f46e5);
+  }
+
+  .checklist-count {
+    margin-left: 10px;
+    color: var(--muted, #64748b);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .task-save-button {
+    margin-top: 26px;
+  }
+
+  .comment-list {
+    display: grid;
+    gap: 12px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .comment-item {
+    padding: 14px;
+    border: 1px solid var(--line, #dbe3ef);
+    border-radius: 12px;
+    background: var(--panel, #fff);
+  }
+
+  .comment-heading {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .comment-heading time {
+    color: var(--muted, #64748b);
+    font-size: 0.84rem;
+  }
+
+  .comment-item p {
+    margin: 10px 0 0;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+  }
+
+  .comment-form {
+    display: grid;
+    gap: 10px;
+    margin-top: 18px;
+  }
+
+  .comment-form button {
+    justify-self: start;
+  }
+
+  .task-toast {
+    position: fixed;
+    z-index: 20;
+    right: 20px;
+    bottom: 20px;
+    max-width: min(440px, calc(100vw - 40px));
+    padding: 14px 18px;
+    border-radius: 12px;
+    background: #166534;
+    color: #fff;
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.22);
+  }
+
+  .task-toast.is-error {
+    background: #991b1b;
+  }
+
+  .task-toast[hidden] {
+    display: none;
+  }
+
+  .member-message:empty {
+    display: none;
+  }
+
+  /* Mantém contraste e leitura dos formulários no tema escuro salvo. */
+  html[data-theme="dark"] {
+    --bg: #111827;
+    --panel: #1f2937;
+    --panel-soft: #263449;
+    --text: #e5e7eb;
+    --muted: #a7b3c5;
+    --line: #39485e;
+    --primary-dark: #c7d2fe;
+  }
+
+  html[data-theme="dark"] .task-status.is-error {
+    border-color: #7f1d1d;
+    background: #3b151a;
+    color: #fecaca;
+  }
+
+  @media (max-width: 600px) {
+    .task-page {
+      padding-top: 76px;
+    }
+
+    .task-form-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .task-inline-form {
+      align-items: stretch;
+      flex-direction: column;
+    }
+
+    .task-inline-form .btn {
+      width: 100%;
+    }
+  }
+
   .nav-actions { /* Estilos do seletor .nav-actions. */
     justify-content: center; /* Configura justify-content com valor center. */
   }

@@ -1,13 +1,82 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Restringe a consulta aos dados do perfil ao próprio usuário autenticado.
     match /users/{userId} {
-      // Somente o usuário autenticado pode acessar seus dados de perfil.
       allow read, write: if request.auth != null && request.auth.uid == userId;
 
+      // Preserva o acesso aos dados legados para permitir sua migração segura.
       match /tasks/{taskId} {
-        // As tarefas ficam sob o UID do dono e não podem ser acessadas por outros usuários.
         allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+    }
+
+    // Define verificações reutilizáveis de associação e papel no quadro.
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function memberPath(boardId, userId) {
+      return /databases/$(database)/documents/boards/$(boardId)/members/$(userId);
+    }
+
+    function boardPath(boardId) {
+      return /databases/$(database)/documents/boards/$(boardId);
+    }
+
+    function isMember(boardId) {
+      return signedIn() && exists(memberPath(boardId, request.auth.uid));
+    }
+
+    function isOwner(boardId) {
+      return signedIn() && get(boardPath(boardId)).data.ownerId == request.auth.uid;
+    }
+
+    function canEdit(boardId) {
+      return isMember(boardId) &&
+        get(memberPath(boardId, request.auth.uid)).data.role in ['OWNER', 'EDITOR'];
+    }
+
+    // Autoriza quadros compartilhados e aplica OWNER, EDITOR e VIEWER em cada operação.
+    match /boards/{boardId} {
+      allow create: if signedIn() && request.resource.data.ownerId == request.auth.uid;
+      allow read: if isMember(boardId) ||
+        (signedIn() && resource.data.ownerId == request.auth.uid);
+      allow update, delete: if isOwner(boardId);
+
+      // Somente o proprietário administra membros; não é possível transferir o papel OWNER.
+      match /members/{memberId} {
+        allow read: if isMember(boardId) || isOwner(boardId);
+        allow create: if isOwner(boardId) &&
+          request.resource.data.uid == memberId &&
+          (
+            request.resource.data.role in ['EDITOR', 'VIEWER'] ||
+            (memberId == request.auth.uid && request.resource.data.role == 'OWNER')
+          );
+        allow update: if isOwner(boardId) &&
+          resource.data.role != 'OWNER' &&
+          request.resource.data.uid == memberId &&
+          request.resource.data.role in ['EDITOR', 'VIEWER'];
+        allow delete: if isOwner(boardId) && resource.data.role != 'OWNER';
+      }
+
+      // Leitores consultam tarefas, mas apenas editores e proprietários podem alterá-las.
+      match /tasks/{taskId} {
+        allow read: if isMember(boardId);
+        allow create, update, delete: if canEdit(boardId);
+
+        // Comentários são legíveis por todos os membros e só podem ser publicados por editores.
+        match /comments/{commentId} {
+          allow read: if isMember(boardId);
+          allow create: if canEdit(boardId) &&
+            request.resource.data.authorId == request.auth.uid &&
+            request.resource.data.authorName is string &&
+            request.resource.data.text is string &&
+            request.resource.data.text.size() > 0 &&
+            request.resource.data.text.size() <= 2000 &&
+            request.resource.data.createdAt is int;
+          allow update, delete: if false;
+        }
       }
     }
   }

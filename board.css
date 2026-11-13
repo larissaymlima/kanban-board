@@ -524,3 +524,127 @@ textarea { /* Estilos do seletor textarea. */
     min-height: 44px; /* Configura min-height com valor 44px. */
   }
 }
+
+/* Apresenta metadados das tarefas sem competir com o título do cartão. */
+.task-card-details,
+.task-card-labels {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+  margin-top: 10px;
+}
+
+.task-card-assignee,
+.task-due-date,
+.task-checklist-count {
+  color: #53647a;
+  font-size: 0.78rem;
+}
+
+.task-priority {
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 4px 8px;
+}
+
+.priority-baixa {
+  background: #e8f5e9;
+  color: #256029;
+}
+
+.priority-media {
+  background: #fff4d6;
+  color: #805b00;
+}
+
+.priority-alta {
+  background: #fee4e2;
+  color: #b42318;
+}
+
+.task-due-date.is-overdue {
+  color: #b42318;
+  font-weight: 800;
+}
+
+.task-label-chip {
+  border-radius: 999px;
+  background: #eef4ff;
+  color: #3730a3;
+  font-size: 0.73rem;
+  font-weight: 700;
+  padding: 4px 8px;
+}
+
+.task-open-link {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.member-dialog {
+  max-width: 480px;
+}
+
+.member-message {
+  color: #53647a;
+}
+
+.task-dialog select {
+  width: 100%;
+  min-height: 42px;
+  padding: 9px 11px;
+  border: 1px solid #cbd5e1;
+  border-radius: 9px;
+  background: #fff;
+  color: #1f2937;
+  font: inherit;
+}
+
+.task-actions .task-open-link {
+  color: inherit;
+}
+
+/* Preserva legibilidade dos quadros, cartões e diálogos no modo escuro. */
+html[data-theme="dark"] body {
+  background: #111827;
+  color: #e5e7eb;
+}
+
+html[data-theme="dark"] .board-column,
+html[data-theme="dark"] .task-card,
+html[data-theme="dark"] .task-dialog {
+  border-color: #39485e;
+  background: #1f2937;
+  color: #e5e7eb;
+}
+
+html[data-theme="dark"] .board-heading h1,
+html[data-theme="dark"] .column-header h2,
+html[data-theme="dark"] .task-card h3,
+html[data-theme="dark"] .task-dialog h2,
+html[data-theme="dark"] .task-dialog label {
+  color: #e5e7eb;
+}
+
+html[data-theme="dark"] .task-card-assignee,
+html[data-theme="dark"] .task-due-date,
+html[data-theme="dark"] .task-checklist-count,
+html[data-theme="dark"] .member-message {
+  color: #a7b3c5;
+}
+
+html[data-theme="dark"] .task-label-chip {
+  background: #302e68;
+  color: #dbeafe;
+}
+
+html[data-theme="dark"] .task-dialog input,
+html[data-theme="dark"] .task-dialog textarea,
+html[data-theme="dark"] .task-dialog select {
+  border-color: #39485e;
+  background: #111827;
+  color: #e5e7eb;
+}
