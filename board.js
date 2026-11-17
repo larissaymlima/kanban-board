@@ -86,6 +86,15 @@ const taskDetailColumn = document.querySelector("#task-detail-column");
 const taskDetailRole = document.querySelector("#task-detail-role");
 const taskDetailBack = document.querySelector("#task-detail-back");
 const taskDetailEditButton = document.querySelector("#task-detail-edit");
+const taskAssigneeSelect = document.querySelector("#task-assignee");
+const taskAssigneeStatus = document.querySelector("#task-assignee-status");
+const taskPrioritySelect = document.querySelector("#task-priority");
+const taskDetailLabelList = document.querySelector("#task-detail-label-list");
+const taskLabelForm = document.querySelector("#task-label-form");
+const taskLabelName = document.querySelector("#task-label-name");
+const taskLabelColor = document.querySelector("#task-label-color");
+const taskLabelAddButton = document.querySelector("#task-label-add");
+const taskMetadataStatus = document.querySelector("#task-metadata-status");
 const taskComments = document.querySelector("#task-comments");
 const taskCommentsStatus = document.querySelector("#task-comments-status");
 const taskCommentList = document.querySelector("#task-comment-list");
@@ -118,6 +127,16 @@ let boardReady = false;
 let taskDetailColumnName = "";
 let stopTasksListener = null;
 let stopCommentsListener = null;
+let stopBoardMembersListener = null;
+let boardMembers = [];
+let isSavingTaskMetadata = false;
+const taskPriorities = ["low", "medium", "high", "urgent"];
+const taskPriorityLabels = {
+  low: "Baixa",
+  medium: "Média",
+  high: "Alta",
+  urgent: "Urgente"
+};
 
 if (taskRoute) {
   document.body.classList.add("task-detail-page");
@@ -195,6 +214,149 @@ function isValidTask(task) {
     columns.some((column) => column.dataset.columnId === task.columnId);
 }
 
+function normalizeTask(task) {
+  const labels = Array.isArray(task.labels)
+    ? task.labels.filter((label) =>
+      label &&
+      typeof label.name === "string" &&
+      label.name.trim() &&
+      label.name.trim().length <= 24 &&
+      typeof label.color === "string" &&
+      /^#[\da-f]{6}$/i.test(label.color)
+    ).slice(0, 20)
+    : [];
+  const seenLabels = new Set();
+  return {
+    ...task,
+    description: typeof task.description === "string" ? task.description : "",
+    assigneeUid: typeof task.assigneeUid === "string" ? task.assigneeUid : "",
+    priority: taskPriorities.includes(task.priority) ? task.priority : "",
+    labels: labels.filter((label) => {
+      const key = label.name.trim().toLocaleLowerCase();
+      if (seenLabels.has(key)) return false;
+      seenLabels.add(key);
+      return true;
+    }).map((label) => ({
+      name: label.name.trim(),
+      color: label.color.toUpperCase()
+    }))
+  };
+}
+
+function getMemberDisplayName(member) {
+  if (member.isOwner) {
+    if (currentUser?.uid === member.uid) {
+      return currentUser.displayName?.trim() ||
+        member.name?.trim() ||
+        "Proprietário do quadro";
+    }
+    return member.name?.trim() || "Proprietário do quadro";
+  }
+  return member.name?.trim() || "Nome não informado";
+}
+
+function getAssigneeName(assigneeUid) {
+  if (!assigneeUid) return "";
+  const member = boardMembers.find((item) => item.uid === assigneeUid);
+  return member ? getMemberDisplayName(member) : "";
+}
+
+function startBoardMembersListener(boardId, ownerUid) {
+  stopBoardMembersListener?.();
+  stopBoardMembersListener = null;
+  boardMembers = [{ uid: ownerUid, role: "owner", isOwner: true }];
+
+  return new Promise((resolve, reject) => {
+    let waitingForFirstSnapshot = true;
+    const unsubscribe = onSnapshot(
+      collection(db, "boards", boardId, "members"),
+      (snapshot) => {
+        if (currentBoard?.id !== boardId) return;
+        let members;
+        try {
+          members = snapshot.docs.map((memberDocument) => {
+            const member = memberDocument.data();
+            if (member.uid !== memberDocument.id ||
+                member.uid === ownerUid ||
+                !["editor", "reader"].includes(member.role)) {
+              throw new Error("O Firestore contém um registro de membro inválido.");
+            }
+            return {
+              uid: member.uid,
+              name: typeof member.name === "string" ? member.name.trim() : "",
+              role: member.role,
+              isOwner: false
+            };
+          });
+        } catch (error) {
+          console.error("Dados inválidos ao carregar os membros do quadro:", error);
+          boardMembers = [{ uid: ownerUid, role: "owner", isOwner: true }];
+          if (waitingForFirstSnapshot) {
+            waitingForFirstSnapshot = false;
+            unsubscribe();
+            stopBoardMembersListener = null;
+            reject(error);
+          } else {
+            renderBoard();
+            const currentTask = tasks.find((task) => task.id === taskRoute?.taskId);
+            if (taskRoute && currentTask) {
+              renderTaskDetail(currentTask, taskDetailColumnName);
+            }
+          }
+          return;
+        }
+
+        boardMembers = [
+          { uid: ownerUid, role: "owner", isOwner: true },
+          ...members
+        ];
+        if (currentBoard?.id === boardId && currentUser) {
+          if (currentUser.uid === ownerUid) {
+            currentBoard.role = "owner";
+          } else {
+            const currentMembership = boardMembers.find(
+              (member) => member.uid === currentUser.uid
+            );
+            if (currentMembership) currentBoard.role = currentMembership.role;
+          }
+          renderBoard();
+          const currentTask = tasks.find((task) => task.id === taskRoute?.taskId);
+          if (taskRoute && currentTask) {
+            renderTaskDetail(currentTask, taskDetailColumnName);
+          }
+        }
+
+        if (waitingForFirstSnapshot) {
+          waitingForFirstSnapshot = false;
+          resolve();
+        }
+      },
+      (error) => {
+        if (currentBoard?.id !== boardId) return;
+        console.error("Erro ao carregar as pessoas com acesso ao quadro:", error);
+        boardMembers = currentBoard?.id === boardId
+          ? [{ uid: ownerUid, role: "owner", isOwner: true }]
+          : [];
+        if (waitingForFirstSnapshot) {
+          waitingForFirstSnapshot = false;
+          stopBoardMembersListener = null;
+          reject(error);
+        } else {
+          renderBoard();
+          const currentTask = tasks.find((task) => task.id === taskRoute?.taskId);
+          if (taskRoute && currentTask) {
+            renderTaskDetail(currentTask, taskDetailColumnName);
+          }
+          const status = taskRoute ? taskDetailStatus : boardStatus;
+          status.textContent = "Não foi possível atualizar as pessoas com acesso ao quadro.";
+          status.classList.add("is-error");
+        }
+      }
+    );
+    stopBoardMembersListener = unsubscribe;
+  });
+}
+
 // Mantém em memória os documentos carregados para o usuário autenticado.
 let tasks = [];
 
@@ -221,10 +383,7 @@ function loadTasks() {
         return;
       }
 
-      tasks = loadedTasks.map((task) => ({
-        ...task,
-        description: typeof task.description === "string" ? task.description : ""
-      }));
+      tasks = loadedTasks.map(normalizeTask);
       renderBoard();
       if (waitingForFirstSnapshot) {
         waitingForFirstSnapshot = false;
@@ -250,6 +409,79 @@ function taskDetailUrl(boardId, taskId) {
   return url.href;
 }
 
+function createTaskLabel(label, removable = false, onRemove = null) {
+  const item = document.createElement("li");
+  item.className = "task-label";
+  item.style.setProperty("--task-label-color", label.color);
+  const name = document.createElement("span");
+  name.textContent = label.name;
+  item.append(name);
+
+  if (removable && onRemove) {
+    const removeButton = document.createElement("button");
+    removeButton.className = "task-label-remove";
+    removeButton.type = "button";
+    removeButton.textContent = "×";
+    removeButton.setAttribute("aria-label", `Remover etiqueta ${label.name}`);
+    removeButton.disabled = isSavingTaskMetadata;
+    removeButton.addEventListener("click", onRemove);
+    item.append(removeButton);
+  }
+  return item;
+}
+
+function renderTaskMetadata(task) {
+  const canEdit = canEditTasks();
+  taskAssigneeSelect.replaceChildren();
+  const unassignedOption = document.createElement("option");
+  unassignedOption.value = "";
+  unassignedOption.textContent = "Sem responsável";
+  taskAssigneeSelect.append(unassignedOption);
+
+  boardMembers.forEach((member) => {
+    const option = document.createElement("option");
+    option.value = member.uid;
+    option.textContent = getMemberDisplayName(member);
+    taskAssigneeSelect.append(option);
+  });
+
+  const assigneeIsAvailable = boardMembers.some(
+    (member) => member.uid === task.assigneeUid
+  );
+  if (task.assigneeUid && !assigneeIsAvailable) {
+    const unavailableOption = document.createElement("option");
+    unavailableOption.value = "__unavailable_assignee__";
+    unavailableOption.textContent = "Responsável anterior sem acesso";
+    unavailableOption.disabled = true;
+    taskAssigneeSelect.append(unavailableOption);
+  }
+  taskAssigneeSelect.value = task.assigneeUid
+    ? (assigneeIsAvailable ? task.assigneeUid : "__unavailable_assignee__")
+    : "";
+  taskAssigneeSelect.disabled = !canEdit || isSavingTaskMetadata;
+  taskAssigneeStatus.hidden = !task.assigneeUid || assigneeIsAvailable;
+  taskAssigneeStatus.textContent = task.assigneeUid && !assigneeIsAvailable
+    ? "O responsável anterior não tem mais acesso a este quadro. Selecione outra pessoa ou remova a atribuição."
+    : "";
+
+  taskPrioritySelect.value = task.priority;
+  taskPrioritySelect.disabled = !canEdit || isSavingTaskMetadata;
+  taskLabelForm.hidden = !canEdit;
+  taskLabelName.disabled = !canEdit || isSavingTaskMetadata;
+  taskLabelColor.disabled = !canEdit || isSavingTaskMetadata;
+  taskLabelAddButton.disabled = !canEdit || isSavingTaskMetadata ||
+    task.labels.length >= 20;
+
+  taskDetailLabelList.replaceChildren();
+  task.labels.forEach((label, index) => {
+    taskDetailLabelList.append(createTaskLabel(label, canEdit, () => {
+      const updatedLabels = task.labels.filter((_, labelIndex) => labelIndex !== index);
+      void saveTaskMetadata(task, { labels: updatedLabels }, "Etiqueta removida.");
+    }));
+  });
+
+}
+
 function renderTaskDetail(task, columnName) {
   taskDetailColumnName = columnName;
   taskDetailBoard.textContent = currentBoard.name;
@@ -260,11 +492,47 @@ function renderTaskDetail(task, columnName) {
   taskDetailRole.dataset.role = currentBoard.role;
   taskDetailEditButton.hidden = !canEditTasks();
   taskDetailBack.href = new URL("board.html", document.baseURI).href;
+  renderTaskMetadata(task);
   taskDetailCard.hidden = false;
   taskComments.hidden = false;
   taskCommentForm.hidden = !canEditTasks();
   taskDetailStatus.textContent = "";
   taskDetailStatus.classList.remove("is-error");
+}
+
+async function saveTaskMetadata(task, changes, successMessage) {
+  if (!canEditTasks() || isSavingTaskMetadata || !currentBoard) return false;
+  const currentTask = tasks.find((item) => item.id === task.id);
+  if (!currentTask) return false;
+
+  isSavingTaskMetadata = true;
+  taskMetadataStatus.textContent = "Salvando alterações...";
+  taskMetadataStatus.classList.remove("is-error", "is-success");
+  renderTaskMetadata(currentTask);
+
+  try {
+    await updateDoc(doc(db, "boards", currentBoard.id, "tasks", currentTask.id), {
+      ...changes,
+      updatedAt: serverTimestamp()
+    });
+    Object.assign(currentTask, normalizeTask({ ...currentTask, ...changes }));
+    renderBoard();
+    renderTaskMetadata(currentTask);
+    taskMetadataStatus.textContent = successMessage;
+    taskMetadataStatus.classList.add("is-success");
+    return true;
+  } catch (error) {
+    console.error("Erro ao atualizar os detalhes da tarefa:", error);
+    taskMetadataStatus.textContent = error.code === "permission-denied"
+      ? "O Firestore não permitiu atualizar os detalhes. Verifique as regras para os campos de responsável, prioridade e etiquetas."
+      : "Não foi possível salvar as alterações. Verifique sua conexão e tente novamente.";
+    taskMetadataStatus.classList.add("is-error");
+    renderTaskMetadata(currentTask);
+    return false;
+  } finally {
+    isSavingTaskMetadata = false;
+    renderTaskMetadata(currentTask);
+  }
 }
 
 function taskCommentsCollection() {
@@ -364,9 +632,12 @@ function setTaskDetailStatus(message, isError = false) {
 function denyTaskDetailAccess() {
   stopCommentsListener?.();
   stopCommentsListener = null;
+  stopBoardMembersListener?.();
+  stopBoardMembersListener = null;
   currentBoard = null;
   tasks = [];
   columns = [];
+  boardMembers = [];
   taskDetailColumnName = "";
   taskDetailBoard.textContent = "";
   taskDetailTitle.textContent = "";
@@ -422,13 +693,10 @@ async function openTaskDetail(user) {
     }
 
     const boardColumns = await loadBoardColumns(db, taskRoute.boardId);
-    const task = {
+    const task = normalizeTask({
       ...taskSnapshot.data(),
-      id: taskSnapshot.id,
-      description: typeof taskSnapshot.data().description === "string"
-        ? taskSnapshot.data().description
-        : ""
-    };
+      id: taskSnapshot.id
+    });
     const column = boardColumns.find((item) => item.id === task.columnId);
     if (typeof task.title !== "string" || !column) {
       setTaskDetailStatus("Os dados desta tarefa ou da lista associada são inválidos.", true);
@@ -437,6 +705,12 @@ async function openTaskDetail(user) {
 
     tasks = [task];
     setTaskActionsEnabled(true);
+    try {
+      await startBoardMembersListener(taskRoute.boardId, boardData.ownerUid);
+    } catch (error) {
+      taskMetadataStatus.textContent = "Não foi possível carregar as pessoas com acesso. A atribuição de responsáveis ficará indisponível.";
+      taskMetadataStatus.classList.add("is-error");
+    }
     renderTaskDetail(task, column.name);
     listenToTaskComments();
   } catch (error) {
@@ -527,8 +801,13 @@ function renderBoardSelector() {
 async function openBoard(board, rememberSelection = true) {
   stopTasksListener?.();
   stopTasksListener = null;
+  stopBoardMembersListener?.();
+  stopBoardMembersListener = null;
   const previousBoardId = currentBoard?.id;
   currentBoard = board;
+  boardMembers = [{ uid: board.ownerUid, role: "owner", isOwner: true }];
+  taskMetadataStatus.textContent = "";
+  taskMetadataStatus.classList.remove("is-error", "is-success");
   if (shareDialog.open && previousBoardId !== board.id) closeShareDialog();
   syncShareButton();
   activeBoardName.textContent = board.name;
@@ -552,6 +831,12 @@ async function openBoard(board, rememberSelection = true) {
     renderColumns(boardColumns);
     tasks = [];
     renderBoard();
+    try {
+      await startBoardMembersListener(board.id, board.ownerUid);
+    } catch (error) {
+      taskMetadataStatus.textContent = "Não foi possível carregar as pessoas com acesso. A atribuição de responsáveis ficará indisponível.";
+      taskMetadataStatus.classList.add("is-error");
+    }
     await loadTasks();
     boardStatus.textContent = selectionSaved
       ? (board.role === "reader" ? getReadOnlyRoleMessage() : "")
@@ -641,6 +926,31 @@ function createTaskCard(task) {
     description.textContent = task.description;
     card.append(description);
   }
+
+  const metadata = document.createElement("div");
+  metadata.className = "task-card-metadata";
+  if (task.assigneeUid) {
+    const assignee = document.createElement("span");
+    assignee.className = "task-assignee-badge";
+    const assigneeName = getAssigneeName(task.assigneeUid);
+    assignee.textContent = assigneeName
+      ? `Responsável: ${assigneeName}`
+      : "Responsável sem acesso";
+    metadata.append(assignee);
+  }
+  if (task.priority) {
+    const priority = document.createElement("span");
+    priority.className = `task-priority-badge priority-${task.priority}`;
+    priority.textContent = taskPriorityLabels[task.priority];
+    metadata.append(priority);
+  }
+  if (task.labels.length) {
+    const labels = document.createElement("ul");
+    labels.className = "task-label-list task-card-labels";
+    task.labels.forEach((label) => labels.append(createTaskLabel(label)));
+    metadata.append(labels);
+  }
+  if (metadata.childElementCount) card.append(metadata);
 
   const openLink = document.createElement("a");
   openLink.className = "task-open-link";
@@ -973,6 +1283,58 @@ taskForm.addEventListener("submit", async (event) => {
   closeDialog();
 });
 
+taskAssigneeSelect.addEventListener("change", () => {
+  const task = tasks.find((item) => item.id === taskRoute?.taskId);
+  if (task) {
+    void saveTaskMetadata(
+      task,
+      { assigneeUid: taskAssigneeSelect.value },
+      "Responsável atualizado."
+    );
+  }
+});
+
+taskPrioritySelect.addEventListener("change", () => {
+  const task = tasks.find((item) => item.id === taskRoute?.taskId);
+  if (task) {
+    void saveTaskMetadata(
+      task,
+      { priority: taskPrioritySelect.value },
+      "Prioridade atualizada."
+    );
+  }
+});
+
+taskLabelForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const task = tasks.find((item) => item.id === taskRoute?.taskId);
+  if (!task || !canEditTasks() || isSavingTaskMetadata) return;
+
+  const name = taskLabelName.value.trim();
+  if (!name || name.length > 24) return;
+  if (task.labels.length >= 20) {
+    taskMetadataStatus.textContent = "Uma tarefa pode ter no máximo 20 etiquetas.";
+    taskMetadataStatus.classList.remove("is-success");
+    taskMetadataStatus.classList.add("is-error");
+    return;
+  }
+  if (task.labels.some((label) =>
+    label.name.toLocaleLowerCase() === name.toLocaleLowerCase()
+  )) {
+    taskMetadataStatus.textContent = "Esta etiqueta já foi adicionada à tarefa.";
+    taskMetadataStatus.classList.remove("is-success");
+    taskMetadataStatus.classList.add("is-error");
+    return;
+  }
+
+  const labels = [
+    ...task.labels,
+    { name, color: taskLabelColor.value.toUpperCase() }
+  ];
+  const saved = await saveTaskMetadata(task, { labels }, "Etiqueta adicionada.");
+  if (saved) taskLabelName.value = "";
+});
+
 taskDetailEditButton.addEventListener("click", () => {
   if (taskRoute) openEditForm(taskRoute.taskId);
 });
@@ -1058,15 +1420,6 @@ function getMemberOperationError(error, action) {
     return "O membro não foi encontrado. Atualize a lista e tente novamente.";
   }
   return error.message || `Não foi possível ${action}. Tente novamente.`;
-}
-
-function getMemberDisplayName(member) {
-  if (member.isOwner && currentUser?.uid === member.uid) {
-    return currentUser.displayName?.trim() || "Proprietário do quadro";
-  }
-  return member.name?.trim() || (member.isOwner
-    ? "Proprietário do quadro"
-    : "Nome não informado");
 }
 
 function renderMemberList(members) {
@@ -1789,6 +2142,9 @@ onAuthStateChanged(auth, async (user) => {
     stopTasksListener = null;
     stopCommentsListener?.();
     stopCommentsListener = null;
+    stopBoardMembersListener?.();
+    stopBoardMembersListener = null;
+    boardMembers = [];
     currentUser = null;
     currentBoard = null;
     syncShareButton();

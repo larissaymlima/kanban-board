@@ -95,39 +95,120 @@ service cloud.firestore {
 
       match /columns/{columnId} {
         allow get, list: if canReadBoard();
+
         allow create: if isOwnerAfterWrite() &&
           request.resource.data.name is string &&
           request.resource.data.name.size() > 0 &&
           request.resource.data.name.size() <= 100 &&
           request.resource.data.order is int;
+
         allow update: if isOwner() &&
           request.resource.data.name is string &&
           request.resource.data.name.size() > 0 &&
           request.resource.data.name.size() <= 100 &&
           request.resource.data.order is int;
+
         allow delete: if isOwner();
       }
 
       match /tasks/{taskId} {
+
+        function validPriority(value) {
+          return value == null ||
+            value == '' ||
+            value in ['low', 'medium', 'high', 'urgent'];
+        }
+
+        function assigneeMemberReference(uid) {
+          return /databases/$(database)/documents/boards/$(boardId)/members/$(uid);
+        }
+
+        function validAssignee(uid) {
+          return uid == '' ||
+            (uid is string &&
+              uid.size() <= 128 &&
+              (uid == get(boardReference()).data.ownerUid ||
+                (exists(assigneeMemberReference(uid)) &&
+                  get(assigneeMemberReference(uid)).data.uid == uid &&
+                  get(assigneeMemberReference(uid)).data.role in ['editor', 'reader'])));
+        }
+
+        function validLabels(value) {
+          return value is list && value.size() <= 20;
+        }
+
         allow get, list: if canReadBoard();
 
-        allow create, update: if (isOwnerAfterWrite() || canEditBoard()) &&
+        allow create: if (isOwnerAfterWrite() || canEditBoard()) &&
           request.resource.data.title is string &&
           request.resource.data.title.size() > 0 &&
           request.resource.data.columnId is string &&
           exists(/databases/$(database)/documents/boards/$(boardId)/columns/$(request.resource.data.columnId)) &&
-          (!("description" in request.resource.data) ||
+          (!('description' in request.resource.data) ||
             request.resource.data.description is string ||
             request.resource.data.description == null) &&
-          (!("status" in request.resource.data) ||
-            request.resource.data.status is string);
+          (!('status' in request.resource.data) ||
+            request.resource.data.status is string) &&
+          (!('priority' in request.resource.data) ||
+            validPriority(request.resource.data.priority)) &&
+          (!('assigneeUid' in request.resource.data) ||
+            validAssignee(request.resource.data.assigneeUid)) &&
+          (!('labels' in request.resource.data) ||
+            validLabels(request.resource.data.labels));
+
+        allow update: if (isOwnerAfterWrite() || canEditBoard()) &&
+          request.resource.data.title is string &&
+          request.resource.data.title.size() > 0 &&
+          request.resource.data.columnId is string &&
+          exists(/databases/$(database)/documents/boards/$(boardId)/columns/$(request.resource.data.columnId)) &&
+          (!('description' in request.resource.data) ||
+            request.resource.data.description is string ||
+            request.resource.data.description == null) &&
+          (!('status' in request.resource.data) ||
+            request.resource.data.status is string) &&
+          (!('priority' in request.resource.data) ||
+            validPriority(request.resource.data.priority) ||
+            ('priority' in resource.data &&
+              request.resource.data.priority == resource.data.priority)) &&
+          (!('assigneeUid' in request.resource.data) ||
+            validAssignee(request.resource.data.assigneeUid) ||
+            ('assigneeUid' in resource.data &&
+              request.resource.data.assigneeUid == resource.data.assigneeUid)) &&
+          (!('labels' in request.resource.data) ||
+            validLabels(request.resource.data.labels) ||
+            ('labels' in resource.data &&
+              request.resource.data.labels == resource.data.labels));
 
         allow delete: if isOwner() ||
           (isBoardMember() &&
             get(memberReference(request.auth.uid)).data.role == 'editor');
+
+        match /comments/{commentId} {
+          allow get, list: if canReadBoard();
+
+          allow create: if canEditBoard() &&
+            request.resource.data.keys().hasAll([
+              'text', 'authorUid', 'authorName', 'createdAt'
+            ]) &&
+            request.resource.data.keys().hasOnly([
+              'text', 'authorUid', 'authorName', 'createdAt'
+            ]) &&
+            request.resource.data.text is string &&
+            request.resource.data.text.size() > 0 &&
+            request.resource.data.text.size() <= 2000 &&
+            request.resource.data.authorUid == request.auth.uid &&
+            request.resource.data.authorName is string &&
+            request.resource.data.authorName.size() > 0 &&
+            request.resource.data.authorName.size() <= 100 &&
+            request.resource.data.createdAt is timestamp &&
+            request.resource.data.createdAt == request.time;
+
+          allow update, delete: if false;
+        }
       }
 
       match /members/{memberUid} {
+
         function memberInvitationReference(invitationId) {
           return /databases/$(database)/documents/boards/$(boardId)/invitations/$(invitationId);
         }
@@ -175,10 +256,7 @@ service cloud.firestore {
             exists(memberReference(request.auth.uid)) &&
             resource.data.uid == request.auth.uid);
 
-        allow list: if isOwner() ||
-          (isAuthenticated() &&
-            memberUid == request.auth.uid &&
-            resource.data.uid == request.auth.uid);
+        allow list: if canReadBoard();
 
         allow create: if memberCreateMatchesAcceptedInvitation();
 
@@ -190,6 +268,7 @@ service cloud.firestore {
       }
 
       match /invitations/{invitationId} {
+
         function acceptedMemberReference() {
           return /databases/$(database)/documents/boards/$(boardId)/members/$(request.auth.uid);
         }
