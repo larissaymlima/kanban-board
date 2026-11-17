@@ -15,8 +15,8 @@
     <link rel="stylesheet" href="auth.css" />
     <!-- Disponibiliza funções comuns de autenticação e alternância de senha. -->
     <script type="module" src="auth.js"></script>
-    <!-- Carrega a lógica específica do formulário de login. -->
-    <script type="module" src="login.js"></script>
+    <!-- Carrega a lógica compartilhada, com inicialização específica de login. -->
+    <script type="module" src="auth-pages.js"></script>
   </head>
   <!-- Aplica a estrutura visual das telas de autenticação. -->
   <body class="auth-page">
@@ -55,7 +55,7 @@
 
       <!-- Área principal com os campos usados para entrar na conta. -->
       <main class="auth-card">
-        <!-- Formulário processado pelo login.js sem recarregar a página. -->
+        <!-- Formulário processado por auth-pages.js sem recarregar a página. -->
         <form id="loginForm" novalidate>
           <!-- Identifica a finalidade do formulário. -->
           <div class="auth-header">

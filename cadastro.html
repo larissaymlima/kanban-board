@@ -15,8 +15,8 @@
     <link rel="stylesheet" href="auth.css" />
     <!-- Carrega funções comuns, incluindo o botão de mostrar senha. -->
     <script type="module" src="auth.js"></script>
-    <!-- Carrega as regras de validação e criação de conta. -->
-    <script type="module" src="cadastro.js"></script>
+    <!-- Carrega a lógica compartilhada, com inicialização específica de cadastro. -->
+    <script type="module" src="auth-pages.js"></script>
   </head>
   <!-- Marca a página para receber os estilos de autenticação e cadastro. -->
   <body class="auth-page cadastro-page">
@@ -56,7 +56,7 @@
 
       <!-- Área principal que contém os dados necessários para criar a conta. -->
       <main class="auth-card cadastro-card">
-        <!-- O cadastro.js valida e processa este formulário. -->
+        <!-- O auth-pages.js valida e processa este formulário. -->
         <form id="cadastroForm" novalidate>
           <!-- Título e introdução do formulário. -->
           <div class="auth-header">
