@@ -788,6 +788,71 @@ label {
   color: var(--muted);
 }
 
+.column-header {
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px 0;
+}
+
+.board-column.is-wip-limit-reached {
+  border-color: rgba(200, 90, 50, 0.78);
+  background: rgba(200, 90, 50, 0.07);
+}
+
+.board-column.is-wip-limit-reached .task-count {
+  background: rgba(200, 90, 50, 0.2);
+  color: #F0B49B;
+}
+
+.column-wip-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+}
+
+.column-wip-label {
+  color: var(--muted);
+  font-size: 0.73rem;
+  font-weight: 700;
+}
+
+.column-wip-limit-input {
+  width: 76px;
+  min-height: 32px;
+  padding: 4px 7px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--surface-raised);
+  color: var(--ink);
+  font: inherit;
+}
+
+.column-wip-save,
+.column-wip-remove {
+  min-height: 32px;
+  padding: 4px 8px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.column-wip-save:hover:not(:disabled),
+.column-wip-remove:hover:not(:disabled) {
+  border-color: var(--primary);
+}
+
+.column-wip-save:disabled,
+.column-wip-remove:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
 .column-add-task {
   border-color: rgba(59, 122, 87, 0.48);
   background: rgba(59, 122, 87, 0.08);
