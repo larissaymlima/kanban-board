@@ -1,16 +1,23 @@
 :root { /* Estilos do seletor :root. */
-  --bg: #f4f7fb; /* Configura --bg com valor #f4f7fb. */
-  --panel: #ffffff; /* Configura --panel com valor #ffffff. */
-  --panel-alt: #eef4ff; /* Configura --panel-alt com valor #eef4ff. */
-  --primary: #4f46e5; /* Configura --primary com valor #4f46e5. */
-  --primary-dark: #3730a3; /* Configura --primary-dark com valor #3730a3. */
-  --primary-soft: rgba(79, 70, 229, 0.12); /* Configura --primary-soft com valor rgba(79, 70, 229, 0.12). */
-  --text: #1f2937; /* Configura --text com valor #1f2937. */
-  --muted: #6b7280; /* Configura --muted com valor #6b7280. */
-  --line: #e5e7eb; /* Configura --line com valor #e5e7eb. */
-  --success: #10b981; /* Configura --success com valor #10b981. */
-  --danger: #ef4444; /* Configura --danger com valor #ef4444. */
-  --shadow: 0 20px 45px rgba(31, 41, 55, 0.12); /* Configura --shadow com valor 0 20px 45px rgba(31, 41, 55, 0.12). */
+  --canvas: #1C1816;
+  --surface: #2A2522;
+  --surface-raised: #342E2A;
+  --text-primary: #F4F1EA;
+  --text-secondary: #A69E93;
+  --tech-accent: #3B7A57;
+  --warm-accent: #C85A32;
+  --bg: var(--canvas);
+  --panel: var(--surface);
+  --panel-alt: var(--surface-raised);
+  --primary: var(--tech-accent);
+  --primary-dark: #2D6044;
+  --primary-soft: rgba(59, 122, 87, 0.16);
+  --text: var(--text-primary);
+  --muted: var(--text-secondary);
+  --line: #514941;
+  --success: var(--tech-accent);
+  --danger: var(--warm-accent);
+  --shadow: 0 20px 45px rgba(0, 0, 0, 0.3);
 }
 
 * { /* Estilos do seletor *. */
@@ -84,7 +91,7 @@ input { /* Estilos do seletor input. */
   width: 28px; /* Configura width com valor 28px. */
   height: 28px; /* Configura height com valor 28px. */
   border-radius: 10px; /* Configura border-radius com valor 10px. */
-  background: linear-gradient(135deg, #8b5cf6, #60a5fa); /* Configura background com valor linear-gradient(135deg, #8b5cf6, #60a5fa). */
+  background: linear-gradient(135deg, var(--primary-dark), var(--primary));
   font-size: 0.9rem; /* Configura font-size com valor 0.9rem. */
 }
 
@@ -134,18 +141,18 @@ input { /* Estilos do seletor input. */
 }
 
 .mini-card.blue { /* Estilos do seletor .mini-card.blue. */
-  background: rgba(96, 165, 250, 0.2); /* Configura background com valor rgba(96, 165, 250, 0.2). */
-  color: #dbeafe; /* Configura color com valor #dbeafe. */
+  background: rgba(59, 122, 87, 0.22);
+  color: #C5DDCB;
 }
 
 .mini-card.purple { /* Estilos do seletor .mini-card.purple. */
-  background: rgba(168, 85, 247, 0.2); /* Configura background com valor rgba(168, 85, 247, 0.2). */
-  color: #f3e8ff; /* Configura color com valor #f3e8ff. */
+  background: rgba(200, 90, 50, 0.2);
+  color: #F0B49B;
 }
 
 .mini-card.green { /* Estilos do seletor .mini-card.green. */
-  background: rgba(16, 185, 129, 0.2); /* Configura background com valor rgba(16, 185, 129, 0.2). */
-  color: #d1fae5; /* Configura color com valor #d1fae5. */
+  background: rgba(59, 122, 87, 0.22);
+  color: #C5DDCB;
 }
 
 .auth-card { /* Estilos do seletor .auth-card. */
@@ -274,13 +281,13 @@ input { /* Estilos do seletor input. */
 }
 
 .toggle-password:hover { /* Estilos do seletor .toggle-password:hover. */
-  background: rgba(79, 70, 229, 0.08); /* Configura background com valor rgba(79, 70, 229, 0.08). */
+  background: rgba(59, 122, 87, 0.16);
 }
 
 input:focus { /* Estilos do seletor input:focus. */
   outline: none; /* Configura outline com valor none. */
-  border-color: rgba(79, 70, 229, 0.7); /* Configura border-color com valor rgba(79, 70, 229, 0.7). */
-  box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1); /* Configura box-shadow com valor 0 0 0 4px rgba(79, 70, 229, 0.1). */
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(59, 122, 87, 0.18);
 }
 
 .btn { /* Estilos do seletor .btn. */
@@ -302,9 +309,9 @@ input:focus { /* Estilos do seletor input:focus. */
 }
 
 .btn-primary { /* Estilos do seletor .btn-primary. */
-  background: linear-gradient(135deg, var(--primary), #6d5efc); /* Configura background com valor linear-gradient(135deg, var(--primary), #6d5efc). */
+  background: linear-gradient(135deg, var(--primary-dark), var(--primary));
   color: #fff; /* Configura color com valor #fff. */
-  box-shadow: 0 12px 22px rgba(79, 70, 229, 0.24); /* Configura box-shadow com valor 0 12px 22px rgba(79, 70, 229, 0.24). */
+  box-shadow: 0 12px 22px rgba(59, 122, 87, 0.28);
 }
 
 .btn-secondary { /* Estilos do seletor .btn-secondary. */
@@ -477,4 +484,100 @@ input:focus { /* Estilos do seletor input:focus. */
   body.auth-page { /* Estilos do seletor body.auth-page. */
     justify-content: flex-start; /* Permite rolar a página quando a tela for baixa. */
   }
+}
+
+body.auth-page {
+  background: var(--bg);
+  color: var(--text);
+}
+
+.auth-shell {
+  background: var(--panel);
+  border-color: rgba(166, 158, 147, 0.16);
+}
+
+.auth-visual {
+  background: linear-gradient(160deg, #342E2A 0%, #211C19 100%);
+  color: var(--text);
+}
+
+.auth-visual p {
+  color: var(--muted);
+}
+
+.brand-mark {
+  background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+  color: var(--text);
+}
+
+.mini-board {
+  background: rgba(166, 158, 147, 0.08);
+}
+
+.mini-column {
+  background: rgba(28, 24, 22, 0.72);
+}
+
+.mini-column span {
+  color: var(--muted);
+}
+
+.mini-card.blue,
+.mini-card.green {
+  background: rgba(59, 122, 87, 0.22);
+  color: #C5DDCB;
+}
+
+.mini-card.purple {
+  background: rgba(200, 90, 50, 0.2);
+  color: #F0B49B;
+}
+
+.auth-card {
+  background: var(--panel);
+  color: var(--text);
+}
+
+#cadastroForm .privacy-consent {
+  background: var(--panel-soft);
+}
+
+.auth-header h2,
+label {
+  color: var(--text);
+}
+
+input {
+  border-color: var(--line);
+  background: var(--panel-soft);
+  color: var(--text);
+}
+
+input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(59, 122, 87, 0.18);
+}
+
+.toggle-password:hover {
+  background: rgba(59, 122, 87, 0.16);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+  color: var(--text);
+  box-shadow: 0 12px 22px rgba(59, 122, 87, 0.28);
+}
+
+.btn-secondary {
+  background: var(--panel-soft);
+  color: var(--text);
+}
+
+.form-message.success,
+.auth-link a {
+  color: #6FAA83;
+}
+
+.form-message.error {
+  color: #E28663;
 }

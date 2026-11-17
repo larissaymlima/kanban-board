@@ -1,14 +1,20 @@
 :root { /* Estilos do seletor :root. */
-  --ink: #263b3a; /* Configura --ink com valor #263b3a. */
-  --muted: #788684; /* Configura --muted com valor #788684. */
-  --line: #e5eae8; /* Configura --line com valor #e5eae8. */
-  --paper: #ffffff; /* Configura --paper com valor #ffffff. */
-  --canvas: #f5f7f6; /* Configura --canvas com valor #f5f7f6. */
-  --green: #2f6257; /* Configura --green com valor #2f6257. */
-  --green-dark: #244d45; /* Configura --green-dark com valor #244d45. */
-  --primary: #4f46e5; /* Configura --primary com valor #4f46e5. */
-  --primary-soft: rgba(79, 70, 229, 0.08); /* Configura --primary-soft com valor rgba(79, 70, 229, 0.08). */
-  --shadow: 0 10px 25px rgba(38, 59, 58, 0.08); /* Configura --shadow com valor 0 10px 25px rgba(38, 59, 58, 0.08). */
+  --canvas: #1C1816;
+  --surface: #2A2522;
+  --surface-raised: #342E2A;
+  --text-primary: #F4F1EA;
+  --text-secondary: #A69E93;
+  --tech-accent: #3B7A57;
+  --warm-accent: #C85A32;
+  --ink: var(--text-primary);
+  --muted: var(--text-secondary);
+  --line: #514941;
+  --paper: var(--surface);
+  --green: var(--tech-accent);
+  --green-dark: #2D6044;
+  --primary: var(--tech-accent);
+  --primary-soft: rgba(59, 122, 87, 0.16);
+  --shadow: 0 10px 25px rgba(0, 0, 0, 0.28);
 }
 
 * { /* Estilos do seletor *. */
@@ -44,6 +50,82 @@ textarea { /* Estilos do seletor textarea. */
   justify-content: space-between; /* Configura justify-content com valor space-between. */
   margin-bottom: 24px; /* Configura margin-bottom com valor 24px. */
   gap: 16px; /* Configura gap com valor 16px. */
+}
+
+.active-board-name {
+  margin: 8px 0 0;
+  color: #53647a;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.board-role-badge {
+  width: fit-content;
+  margin: 7px 0 0;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: rgba(59, 122, 87, 0.2);
+  color: #C5DDCB;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.board-role-badge[data-role="reader"] {
+  background: #eef2f6;
+  color: #475569;
+}
+
+.board-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.board-controls select {
+  min-width: 190px;
+  min-height: 42px;
+  margin: 0;
+  padding: 0 34px 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.create-board-button {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--green-dark), var(--primary));
+  color: var(--ink);
+  cursor: pointer;
+  font-size: 0.86rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.create-board-button:hover {
+  background: linear-gradient(135deg, var(--green-dark), var(--primary));
+}
+
+.create-board-button:disabled,
+.board-controls select:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.board-form-message {
+  min-height: 20px;
+  margin: 0;
+  color: #b42318;
+  font-size: 0.85rem;
 }
 
 .board-status {
@@ -83,8 +165,8 @@ textarea { /* Estilos do seletor textarea. */
   gap: 10px; /* Configura gap com valor 10px. */
   padding: 10px 14px; /* Configura padding com valor 10px 14px. */
   border-radius: 999px; /* Configura border-radius com valor 999px. */
-  background: rgba(79, 70, 229, 0.08); /* Configura background com valor rgba(79, 70, 229, 0.08). */
-  color: #3730a3; /* Configura color com valor #3730a3. */
+  background: rgba(59, 122, 87, 0.16);
+  color: #C5DDCB;
   font-weight: 700; /* Configura font-weight com valor 700. */
 }
 
@@ -94,24 +176,24 @@ textarea { /* Estilos do seletor textarea. */
   width: 26px; /* Configura width com valor 26px. */
   height: 26px; /* Configura height com valor 26px. */
   border-radius: 50%; /* Configura border-radius com valor 50%. */
-  background: linear-gradient(135deg, #8b5cf6, #60a5fa); /* Configura background com valor linear-gradient(135deg, #8b5cf6, #60a5fa). */
-  color: #fff; /* Configura color com valor #fff. */
+  background: linear-gradient(135deg, var(--green-dark), var(--primary));
+  color: var(--ink);
   font-size: 0.75rem; /* Configura font-size com valor 0.75rem. */
 }
 
 .account-button { /* Estilos do seletor .account-button. */
   padding: 9px 12px; /* Configura padding com valor 9px 12px. */
-  border: 1px solid #dfe4f2; /* Configura border com valor 1px solid #dfe4f2. */
+  border: 1px solid var(--line);
   border-radius: 10px; /* Configura border-radius com valor 10px. */
-  background: #fff; /* Configura background com valor #fff. */
-  color: #3730a3; /* Configura color com valor #3730a3. */
+  background: var(--paper);
+  color: var(--ink);
   cursor: pointer; /* Configura cursor com valor pointer. */
   font-size: 0.82rem; /* Configura font-size com valor 0.82rem. */
   font-weight: 700; /* Configura font-weight com valor 700. */
 }
 
 .account-button:hover { /* Estilos do seletor .account-button:hover. */
-  background: #eef2ff; /* Configura background com valor #eef2ff. */
+  background: var(--surface-raised);
 }
 
 .logout-button { /* Estilos do seletor .logout-button. */
@@ -133,16 +215,16 @@ textarea { /* Estilos do seletor textarea. */
   min-width: 0; /* Configura min-width com valor 0. */
   min-height: 360px; /* Configura min-height com valor 360px. */
   padding: 0 12px 14px; /* Configura padding com valor 0 12px 14px. */
-  border: 1px solid #e8edeb; /* Configura border com valor 1px solid #e8edeb. */
+  border: 1px solid var(--line);
   border-radius: 18px; /* Configura border-radius com valor 18px. */
-  background: rgba(255, 255, 255, 0.8); /* Configura background com valor rgba(255, 255, 255, 0.8). */
+  background: var(--paper);
   box-shadow: var(--shadow); /* Configura box-shadow com valor var(--shadow). */
   transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease; /* Configura transition com valor transform 0.2s ease, background 0.2s ease, border-color 0.2s ease. */
 }
 
 .board-column.is-over { /* Estilos do seletor .board-column.is-over. */
-  border-color: rgba(79, 70, 229, 0.7); /* Configura border-color com valor rgba(79, 70, 229, 0.7). */
-  background: rgba(79, 70, 229, 0.04); /* Configura background com valor rgba(79, 70, 229, 0.04). */
+  border-color: rgba(59, 122, 87, 0.72);
+  background: rgba(59, 122, 87, 0.1);
   transform: translateY(-1px); /* Configura transform com valor translateY(-1px). */
 }
 
@@ -203,18 +285,18 @@ textarea { /* Estilos do seletor textarea. */
   gap: 8px; /* Configura gap com valor 8px. */
   margin-top: 12px; /* Configura margin-top com valor 12px. */
   padding: 0 12px; /* Configura padding com valor 0 12px. */
-  border: 1px dashed #c9d5f7; /* Configura border com valor 1px dashed #c9d5f7. */
+  border: 1px dashed rgba(59, 122, 87, 0.48);
   border-radius: 12px; /* Configura border-radius com valor 12px. */
-  background: rgba(79, 70, 229, 0.03); /* Configura background com valor rgba(79, 70, 229, 0.03). */
-  color: #3d4f9f; /* Configura color com valor #3d4f9f. */
+  background: rgba(59, 122, 87, 0.08);
+  color: #C5DDCB;
   cursor: pointer; /* Configura cursor com valor pointer. */
   font-size: 0.86rem; /* Configura font-size com valor 0.86rem. */
   font-weight: 700; /* Configura font-weight com valor 700. */
 }
 
 .column-add-task:hover { /* Estilos do seletor .column-add-task:hover. */
-  border-color: rgba(79, 70, 229, 0.5); /* Configura border-color com valor rgba(79, 70, 229, 0.5). */
-  background: rgba(79, 70, 229, 0.07); /* Configura background com valor rgba(79, 70, 229, 0.07). */
+  border-color: var(--primary);
+  background: rgba(59, 122, 87, 0.16);
 }
 
 .column-add-task:disabled {
@@ -232,13 +314,18 @@ textarea { /* Estilos do seletor textarea. */
 
 .task-card { /* Estilos do seletor .task-card. */
   padding: 14px 14px 12px; /* Configura padding com valor 14px 14px 12px. */
-  border: 1px solid #edf0f5; /* Configura border com valor 1px solid #edf0f5. */
+  border: 1px solid rgba(166, 158, 147, 0.18);
+  border-left: 3px solid var(--primary);
   border-radius: 12px; /* Configura border-radius com valor 12px. */
-  background: linear-gradient(135deg, var(--primary), #6d5efc); /* Usa o mesmo degradê roxo do botão Entrar. */
-  color: #fff; /* Mantém o texto do cartão legível sobre o fundo roxo. */
-  box-shadow: 0 8px 18px rgba(79, 70, 229, 0.2); /* Adiciona profundidade com sombra roxa suave. */
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.24);
   cursor: grab; /* Configura cursor com valor grab. */
   overflow-wrap: anywhere; /* Configura overflow-wrap com valor anywhere. */
+}
+
+.board.is-read-only .task-card {
+  cursor: default;
 }
 
 .task-card:active { /* Estilos do seletor .task-card:active. */
@@ -251,7 +338,7 @@ textarea { /* Estilos do seletor textarea. */
 
 .task-card h3 { /* Estilos do seletor .task-card h3. */
   margin: 0; /* Configura margin com valor 0. */
-  color: #fff; /* Exibe o título em branco sobre o degradê roxo. */
+  color: var(--ink);
   font-size: 0.96rem; /* Configura font-size com valor 0.96rem. */
   font-weight: 700; /* Configura font-weight com valor 700. */
   line-height: 1.45; /* Configura line-height com valor 1.45. */
@@ -259,7 +346,7 @@ textarea { /* Estilos do seletor textarea. */
 
 .task-description { /* Estilos do seletor .task-description. */
   margin: 10px 0 0; /* Configura margin com valor 10px 0 0. */
-  color: rgba(255, 255, 255, 0.82); /* Mantém a descrição clara e legível. */
+  color: var(--muted);
   font-size: 0.8rem; /* Configura font-size com valor 0.8rem. */
   line-height: 1.55; /* Configura line-height com valor 1.55. */
 }
@@ -270,7 +357,7 @@ textarea { /* Estilos do seletor textarea. */
   gap: 6px; /* Configura gap com valor 6px. */
   margin-top: 12px; /* Configura margin-top com valor 12px. */
   padding-top: 8px; /* Configura padding-top com valor 8px. */
-  border-top: 1px solid rgba(255, 255, 255, 0.24); /* Separa as ações com uma linha translúcida. */
+  border-top: 1px solid rgba(166, 158, 147, 0.18);
 }
 
 .task-action-button { /* Estilos do seletor .task-action-button. */
@@ -278,14 +365,14 @@ textarea { /* Estilos do seletor textarea. */
   border: 0; /* Configura border com valor 0. */
   border-radius: 8px; /* Configura border-radius com valor 8px. */
   background: transparent; /* Configura background com valor transparent. */
-  color: #fff; /* Mantém os botões de ação legíveis no cartão roxo. */
+  color: var(--ink);
   cursor: pointer; /* Configura cursor com valor pointer. */
   font-size: 0.73rem; /* Configura font-size com valor 0.73rem. */
   font-weight: 700; /* Configura font-weight com valor 700. */
 }
 
 .task-action-button:hover { /* Estilos do seletor .task-action-button:hover. */
-  background: rgba(255, 255, 255, 0.16); /* Realça a ação sem esconder o fundo do cartão. */
+  background: rgba(59, 122, 87, 0.18);
 }
 
 .task-delete-button { /* Estilos do seletor .task-delete-button. */
@@ -293,7 +380,7 @@ textarea { /* Estilos do seletor textarea. */
 }
 
 .task-delete-button:hover { /* Estilos do seletor .task-delete-button:hover. */
-  background: rgba(255, 255, 255, 0.16); /* Realça a ação de exclusão de forma consistente. */
+  background: rgba(200, 90, 50, 0.2);
 }
 
 .task-dialog { /* Estilos do seletor .task-dialog. */
@@ -384,8 +471,8 @@ textarea { /* Estilos do seletor textarea. */
 input:focus,
 textarea:focus { /* Estilos do seletor textarea:focus. */
   outline: none; /* Configura outline com valor none. */
-  border-color: rgba(79, 70, 229, 0.8); /* Configura border-color com valor rgba(79, 70, 229, 0.8). */
-  box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.08); /* Configura box-shadow com valor 0 0 0 4px rgba(79, 70, 229, 0.08). */
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(59, 122, 87, 0.18);
 }
 
 .account-password-field {
@@ -411,7 +498,7 @@ textarea:focus { /* Estilos do seletor textarea:focus. */
 }
 
 .account-password-toggle:hover {
-  color: #3730a3;
+  color: var(--primary);
 }
 
 textarea { /* Estilos do seletor textarea. */
@@ -448,13 +535,13 @@ textarea { /* Estilos do seletor textarea. */
 }
 
 .cancel-button { /* Estilos do seletor .cancel-button. */
-  background: #edf2f7; /* Configura background com valor #edf2f7. */
-  color: #334155; /* Configura color com valor #334155. */
+  background: var(--surface-raised);
+  color: var(--ink);
 }
 
 .add-task-button { /* Estilos do seletor .add-task-button. */
-  background: linear-gradient(135deg, #4f46e5, #6366f1); /* Configura background com valor linear-gradient(135deg, #4f46e5, #6366f1). */
-  color: #fff; /* Configura color com valor #fff. */
+  background: linear-gradient(135deg, var(--green-dark), var(--primary));
+  color: var(--ink);
 }
 
 .sr-only { /* Estilos do seletor .sr-only. */
@@ -490,6 +577,15 @@ textarea { /* Estilos do seletor textarea. */
     gap: 14px; /* Configura gap com valor 14px. */
   }
 
+  .board-controls {
+    width: 100%;
+  }
+
+  .board-controls select {
+    min-width: 0;
+    flex: 1;
+  }
+
   .account-actions { /* Estilos do seletor .account-actions. */
     width: 100%; /* Configura width com valor 100%. */
     flex-wrap: wrap; /* Configura flex-wrap com valor wrap. */
@@ -522,5 +618,440 @@ textarea { /* Estilos do seletor textarea. */
   .dialog-actions button { /* Estilos do seletor .dialog-actions button. */
     width: 100%; /* Configura width com valor 100%. */
     min-height: 44px; /* Configura min-height com valor 44px. */
+  }
+
+  .board-controls {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .board-controls select {
+    min-height: 44px;
+    width: 100%;
+  }
+}
+
+body {
+  background: var(--canvas);
+  color: var(--ink);
+}
+
+.active-board-name,
+.board-status,
+.delete-confirmation-message {
+  color: var(--muted);
+}
+
+.board-role-badge {
+  background: rgba(59, 122, 87, 0.2);
+  color: #C5DDCB;
+}
+
+.board-role-badge[data-role="reader"] {
+  background: rgba(166, 158, 147, 0.14);
+  color: var(--muted);
+}
+
+.board-controls select,
+.account-button {
+  border-color: var(--line);
+  background: var(--panel);
+  color: var(--ink);
+}
+
+.create-board-button,
+.add-task-button {
+  background: linear-gradient(135deg, var(--green-dark), var(--primary));
+  color: var(--ink);
+}
+
+.create-board-button:hover,
+.add-task-button:hover {
+  background: linear-gradient(135deg, var(--green-dark), var(--primary));
+}
+
+.board-status.is-error,
+.board-form-message,
+.account-message {
+  border-color: rgba(200, 90, 50, 0.42);
+  color: #E28663;
+}
+
+.board-status.is-error {
+  background: rgba(200, 90, 50, 0.12);
+}
+
+.board-heading h1,
+.column-title-wrap h2,
+label {
+  color: var(--ink);
+}
+
+.board-user {
+  background: rgba(59, 122, 87, 0.16);
+  color: #C5DDCB;
+}
+
+.board-user .avatar {
+  background: linear-gradient(135deg, var(--green-dark), var(--primary));
+  color: var(--ink);
+}
+
+.account-button:hover,
+.close-dialog:hover {
+  background: var(--panel-soft);
+}
+
+.logout-button,
+.site-header-button-logout {
+  color: #E28663;
+}
+
+.board-column {
+  border-color: var(--line);
+  background: var(--paper);
+}
+
+.board-column.is-over {
+  border-color: rgba(59, 122, 87, 0.72);
+  background: rgba(59, 122, 87, 0.1);
+}
+
+.indicator-todo {
+  background: var(--muted);
+}
+
+.indicator-progress,
+.indicator-done {
+  background: var(--primary);
+}
+
+.indicator-review {
+  background: var(--warm-accent);
+}
+
+.task-count {
+  background: var(--panel-soft);
+  color: var(--muted);
+}
+
+.column-add-task {
+  border-color: rgba(59, 122, 87, 0.48);
+  background: rgba(59, 122, 87, 0.08);
+  color: #C5DDCB;
+}
+
+.column-add-task:hover {
+  border-color: var(--primary);
+  background: rgba(59, 122, 87, 0.16);
+}
+
+.task-card {
+  border-color: rgba(166, 158, 147, 0.18);
+  border-left: 3px solid var(--primary);
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.24);
+}
+
+.task-card h3,
+.task-action-button,
+.task-delete-button {
+  color: var(--ink);
+}
+
+.task-description {
+  color: var(--muted);
+}
+
+.task-actions {
+  border-top-color: rgba(166, 158, 147, 0.18);
+}
+
+.task-action-button:hover {
+  background: rgba(59, 122, 87, 0.18);
+}
+
+.task-delete-button:hover {
+  background: rgba(200, 90, 50, 0.2);
+  color: #F0B49B;
+}
+
+.task-dialog {
+  border-color: var(--line);
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: 0 20px 70px rgba(0, 0, 0, 0.48);
+}
+
+.task-dialog::backdrop {
+  background: rgba(12, 10, 9, 0.72);
+}
+
+.confirm-delete-button {
+  border: 1px solid var(--warm-accent);
+  background: #A84626;
+  color: var(--ink);
+}
+
+.confirm-delete-button:hover {
+  background: #8F3A20;
+}
+
+.close-dialog {
+  border-color: var(--line);
+  background: var(--panel-soft);
+  color: var(--ink);
+}
+
+input,
+textarea,
+.task-dialog input,
+.task-dialog textarea {
+  border-color: var(--line);
+  background: var(--panel-soft);
+  color: var(--ink);
+}
+
+input:focus,
+textarea:focus,
+.task-dialog input:focus,
+.task-dialog textarea:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(59, 122, 87, 0.18);
+}
+
+.cancel-button {
+  border-color: var(--line);
+  background: var(--panel-soft);
+  color: var(--ink);
+}
+
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline-color: #6FAA83;
+}
+
+.share-board-button {
+  min-height: 42px;
+  padding: 0 14px;
+  border: 1px solid rgba(59, 122, 87, 0.6);
+  border-radius: 10px;
+  background: rgba(59, 122, 87, 0.12);
+  color: #C5DDCB;
+  cursor: pointer;
+  font-size: 0.86rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.share-board-button:hover {
+  background: rgba(59, 122, 87, 0.22);
+}
+
+.share-board-button[hidden] {
+  display: none;
+}
+
+.received-invitations-button {
+  border-color: rgba(166, 158, 147, 0.45);
+  background: rgba(166, 158, 147, 0.1);
+  color: var(--ink);
+}
+
+.received-invitations-button:hover {
+  background: rgba(166, 158, 147, 0.18);
+}
+
+.share-dialog {
+  width: min(660px, calc(100% - 32px));
+}
+
+.share-dialog form {
+  margin-bottom: 24px;
+}
+
+.share-dialog select {
+  width: 100%;
+  min-height: 44px;
+  margin: 0 0 14px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-raised);
+  color: var(--ink);
+  font: inherit;
+}
+
+.share-help {
+  margin: 0 0 12px;
+  padding: 12px 14px;
+  border: 1px solid rgba(200, 90, 50, 0.35);
+  border-radius: 10px;
+  background: rgba(200, 90, 50, 0.1);
+  color: #F0B49B;
+  font-size: 0.85rem;
+  line-height: 1.55;
+}
+
+.share-message {
+  min-height: 1.3em;
+  margin: 8px 0;
+  color: var(--muted);
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+
+.share-message.is-error {
+  color: #E28663;
+}
+
+.share-message.is-success {
+  color: #6FAA83;
+}
+
+.share-members-section {
+  border-top: 1px solid var(--line);
+  padding-top: 18px;
+}
+
+.share-members-section h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.member-list {
+  display: grid;
+  gap: 10px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.member-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-raised);
+}
+
+.member-details {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.member-identity {
+  color: var(--ink);
+  font-size: 0.86rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.invitation-metadata {
+  color: var(--muted);
+  font-size: 0.78rem;
+  overflow-wrap: anywhere;
+}
+
+.member-role {
+  width: fit-content;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(166, 158, 147, 0.14);
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.member-role-owner {
+  background: rgba(59, 122, 87, 0.2);
+  color: #C5DDCB;
+}
+
+.member-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.share-dialog .member-role-select {
+  width: auto;
+  min-width: 112px;
+  min-height: 38px;
+  margin: 0;
+  padding: 0 9px;
+  font-size: 0.82rem;
+}
+
+.share-action-button {
+  min-height: 38px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+  font: 700 0.8rem Arial, Helvetica, sans-serif;
+}
+
+.share-action-button:hover:not(:disabled) {
+  border-color: var(--primary);
+  background: rgba(59, 122, 87, 0.16);
+}
+
+.share-action-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.member-remove-button {
+  border-color: rgba(200, 90, 50, 0.42);
+  color: #E28663;
+}
+
+.member-remove-button:hover:not(:disabled) {
+  border-color: var(--warm-accent);
+  background: rgba(200, 90, 50, 0.16);
+}
+
+.invitation-accept-button {
+  border-color: rgba(59, 122, 87, 0.55);
+  color: #C5DDCB;
+}
+
+.invitation-accept-button:hover:not(:disabled) {
+  border-color: var(--primary);
+  background: rgba(59, 122, 87, 0.18);
+}
+
+@media (max-width: 560px) {
+  .share-dialog {
+    padding: 18px;
+  }
+
+  .share-board-button {
+    width: 100%;
+  }
+
+  .member-row,
+  .member-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .member-actions {
+    width: 100%;
+  }
+
+  .share-dialog .member-role-select,
+  .share-action-button {
+    width: 100%;
   }
 }

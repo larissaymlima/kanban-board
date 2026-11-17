@@ -1,16 +1,23 @@
 :root { /* Estilos do seletor :root. */
-  --bg: #f5f7fb; /* Configura --bg com valor #f5f7fb. */
-  --panel: #ffffff; /* Configura --panel com valor #ffffff. */
-  --panel-soft: #eef4ff; /* Configura --panel-soft com valor #eef4ff. */
-  --primary: #4f46e5; /* Configura --primary com valor #4f46e5. */
-  --primary-dark: #3730a3; /* Configura --primary-dark com valor #3730a3. */
-  --text: #1f2937; /* Configura --text com valor #1f2937. */
-  --muted: #6b7280; /* Configura --muted com valor #6b7280. */
-  --line: #e5e7eb; /* Configura --line com valor #e5e7eb. */
-  --shadow: 0 18px 40px rgba(15, 23, 42, 0.08); /* Configura --shadow com valor 0 18px 40px rgba(15, 23, 42, 0.08). */
-  --green: #10b981; /* Configura --green com valor #10b981. */
-  --blue: #60a5fa; /* Configura --blue com valor #60a5fa. */
-  --purple: #a78bfa; /* Configura --purple com valor #a78bfa. */
+  --canvas: #1C1816;
+  --surface: #2A2522;
+  --surface-raised: #342E2A;
+  --text-primary: #F4F1EA;
+  --text-secondary: #A69E93;
+  --tech-accent: #3B7A57;
+  --warm-accent: #C85A32;
+  --bg: var(--canvas);
+  --panel: var(--surface);
+  --panel-soft: var(--surface-raised);
+  --primary: var(--tech-accent);
+  --primary-dark: #2D6044;
+  --text: var(--text-primary);
+  --muted: var(--text-secondary);
+  --line: #514941;
+  --shadow: 0 18px 40px rgba(0, 0, 0, 0.28);
+  --green: var(--tech-accent);
+  --blue: var(--text-secondary);
+  --purple: var(--warm-accent);
 }
 
 * { /* Estilos do seletor *. */
@@ -77,7 +84,7 @@ a { /* Estilos do seletor a. */
   width: 32px; /* Configura width com valor 32px. */
   height: 32px; /* Configura height com valor 32px. */
   border-radius: 10px; /* Configura border-radius com valor 10px. */
-  background: linear-gradient(135deg, #8b5cf6, #60a5fa); /* Configura background com valor linear-gradient(135deg, #8b5cf6, #60a5fa). */
+  background: linear-gradient(135deg, var(--primary-dark), var(--primary));
   color: #fff; /* Configura color com valor #fff. */
   font-size: 0.9rem; /* Configura font-size com valor 0.9rem. */
 }
@@ -124,9 +131,9 @@ a { /* Estilos do seletor a. */
 }
 
 .btn-primary { /* Estilos do seletor .btn-primary. */
-  background: linear-gradient(135deg, var(--primary), #6366f1); /* Configura background com valor linear-gradient(135deg, var(--primary), #6366f1). */
+  background: linear-gradient(135deg, var(--primary-dark), var(--primary));
   color: #fff; /* Configura color com valor #fff. */
-  box-shadow: 0 12px 24px rgba(79, 70, 229, 0.24); /* Configura box-shadow com valor 0 12px 24px rgba(79, 70, 229, 0.24). */
+  box-shadow: 0 12px 24px rgba(59, 122, 87, 0.28);
 }
 
 .btn-secondary { /* Estilos do seletor .btn-secondary. */
@@ -254,23 +261,23 @@ a { /* Estilos do seletor a. */
 }
 
 .accent-blue { /* Estilos do seletor .accent-blue. */
-  background: rgba(96, 165, 250, 0.18); /* Configura background com valor rgba(96, 165, 250, 0.18). */
-  color: #1d4ed8; /* Configura color com valor #1d4ed8. */
+  background: rgba(59, 122, 87, 0.18);
+  color: #C5DDCB;
 }
 
 .accent-slate { /* Estilos do seletor .accent-slate. */
-  background: rgba(148, 163, 184, 0.18); /* Configura background com valor rgba(148, 163, 184, 0.18). */
-  color: #334155; /* Configura color com valor #334155. */
+  background: rgba(166, 158, 147, 0.14);
+  color: var(--text);
 }
 
 .accent-purple { /* Estilos do seletor .accent-purple. */
-  background: rgba(167, 139, 250, 0.2); /* Configura background com valor rgba(167, 139, 250, 0.2). */
-  color: #5b21b6; /* Configura color com valor #5b21b6. */
+  background: rgba(200, 90, 50, 0.18);
+  color: #F0B49B;
 }
 
 .accent-green { /* Estilos do seletor .accent-green. */
-  background: rgba(16, 185, 129, 0.14); /* Configura background com valor rgba(16, 185, 129, 0.14). */
-  color: #047857; /* Configura color com valor #047857. */
+  background: rgba(59, 122, 87, 0.18);
+  color: #C5DDCB;
 }
 
 .features,
@@ -312,7 +319,7 @@ a { /* Estilos do seletor a. */
   width: 48px; /* Configura width com valor 48px. */
   height: 48px; /* Configura height com valor 48px. */
   border-radius: 14px; /* Configura border-radius com valor 14px. */
-  background: rgba(79, 70, 229, 0.1); /* Configura background com valor rgba(79, 70, 229, 0.1). */
+  background: rgba(59, 122, 87, 0.18);
   color: var(--primary-dark); /* Configura color com valor var(--primary-dark). */
   font-size: 1.3rem; /* Configura font-size com valor 1.3rem. */
   font-weight: 700; /* Configura font-weight com valor 700. */
@@ -371,8 +378,8 @@ a { /* Estilos do seletor a. */
 }
 
 .price-card.featured { /* Estilos do seletor .price-card.featured. */
-  background: linear-gradient(180deg, #eef2ff 0%, #ffffff 100%); /* Configura background com valor linear-gradient(180deg, #eef2ff 0%, #ffffff 100%). */
-  border-color: rgba(79, 70, 229, 0.2); /* Configura border-color com valor rgba(79, 70, 229, 0.2). */
+  background: linear-gradient(180deg, #342E2A 0%, var(--panel) 100%);
+  border-color: rgba(59, 122, 87, 0.4);
 }
 
 .featured-badge { /* Estilos do seletor .featured-badge. */
@@ -383,7 +390,7 @@ a { /* Estilos do seletor a. */
   align-items: center; /* Configura align-items com valor center. */
   padding: 6px 10px; /* Configura padding com valor 6px 10px. */
   border-radius: 999px; /* Configura border-radius com valor 999px. */
-  background: rgba(79, 70, 229, 0.12); /* Configura background com valor rgba(79, 70, 229, 0.12). */
+  background: rgba(59, 122, 87, 0.18);
   color: var(--primary-dark); /* Configura color com valor var(--primary-dark). */
   font-size: 0.72rem; /* Configura font-size com valor 0.72rem. */
   font-weight: 800; /* Configura font-weight com valor 800. */
@@ -721,6 +728,82 @@ textarea:focus-visible { /* Estilos do seletor textarea:focus-visible. */
   .card-list { /* Estilos do seletor .card-list. */
     min-height: 84px; /* Configura min-height com valor 84px. */
   }
+}
+
+body.landing-page {
+  background: var(--bg);
+  color: var(--text);
+}
+
+.topbar {
+  background: rgba(42, 37, 34, 0.9);
+  border-bottom-color: rgba(166, 158, 147, 0.18);
+}
+
+.brand-mark {
+  background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+  color: var(--text);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+  color: var(--text);
+  box-shadow: 0 12px 24px rgba(59, 122, 87, 0.28);
+}
+
+.btn-secondary {
+  background: var(--panel-soft);
+  color: var(--text);
+}
+
+.board-preview,
+.feature-card,
+.price-card,
+.benefit-list div {
+  background: var(--panel);
+  border-color: var(--line);
+}
+
+.preview-column {
+  background: var(--panel-soft);
+}
+
+.preview-card {
+  background: #3A332E;
+  color: var(--text);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2);
+}
+
+.accent-blue,
+.accent-green {
+  background: rgba(59, 122, 87, 0.18);
+  color: #C5DDCB;
+}
+
+.accent-slate {
+  background: rgba(166, 158, 147, 0.14);
+  color: var(--text);
+}
+
+.accent-purple {
+  background: rgba(200, 90, 50, 0.18);
+  color: #F0B49B;
+}
+
+.icon,
+.featured-badge {
+  background: rgba(59, 122, 87, 0.18);
+  color: #C5DDCB;
+}
+
+.price-card.featured {
+  background: linear-gradient(180deg, #342E2A 0%, var(--panel) 100%);
+  border-color: rgba(59, 122, 87, 0.4);
+}
+
+.footer {
+  background: rgba(42, 37, 34, 0.72);
+  border-top-color: var(--line);
 }
 
 @media (prefers-reduced-motion: reduce) { /* Regras responsivas aplicadas neste ponto. */

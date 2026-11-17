@@ -1,11 +1,18 @@
 /* Define a tipografia e as cores compartilhadas pelo cabeçalho do site. */
 :root {
   --site-font: Arial, Helvetica, sans-serif;
-  --site-primary: #4f46e5;
-  --site-primary-dark: #3730a3;
-  --site-ink: #1f2937;
-  --site-muted: #6b7280;
-  --site-line: #e5e7eb;
+  --canvas: #1C1816;
+  --surface: #2A2522;
+  --surface-raised: #342E2A;
+  --text-primary: #F4F1EA;
+  --text-secondary: #A69E93;
+  --tech-accent: #3B7A57;
+  --warm-accent: #C85A32;
+  --site-primary: var(--tech-accent);
+  --site-primary-dark: #2D6044;
+  --site-ink: var(--text-primary);
+  --site-muted: var(--text-secondary);
+  --site-line: #514941;
 }
 
 /* Mantém fonte, largura e alinhamento consistentes em todos os cabeçalhos. */
@@ -14,8 +21,8 @@
   top: 0;
   z-index: 10;
   width: 100%;
-  border-bottom: 1px solid rgba(229, 231, 235, 0.85);
-  background: rgba(255, 255, 255, 0.88);
+  border-bottom: 1px solid rgba(166, 158, 147, 0.18);
+  background: rgba(42, 37, 34, 0.9);
   color: var(--site-ink);
   font-family: var(--site-font);
   backdrop-filter: blur(12px);
@@ -50,8 +57,8 @@
   display: inline-grid;
   place-items: center;
   border-radius: 10px;
-  background: linear-gradient(135deg, var(--site-primary), #6d5efc);
-  color: #fff;
+  background: linear-gradient(135deg, var(--site-primary-dark), var(--site-primary));
+  color: #F4F1EA;
   font-size: 0.9rem;
 }
 
@@ -84,27 +91,27 @@
 /* Oferece um realce leve e uniforme ao passar o cursor pelos controles. */
 .site-header-link:hover,
 .site-header-button:hover {
-  background: #eef2ff;
+  background: #342E2A;
   color: var(--site-primary-dark);
 }
 
 /* Destaca a ação principal com o mesmo degradê das demais telas. */
 .site-header-link-primary {
   border-color: var(--site-primary);
-  background: linear-gradient(135deg, var(--site-primary), #6d5efc);
-  color: #fff;
+  background: linear-gradient(135deg, var(--site-primary-dark), var(--site-primary));
+  color: #F4F1EA;
 }
 
 /* Mantém o texto da ação principal branco ao passar o cursor. */
 .site-header-link-primary:hover {
   background: linear-gradient(135deg, var(--site-primary-dark), var(--site-primary));
-  color: #fff;
+  color: #F4F1EA;
 }
 
 /* Aplica cor de alerta ao botão de saída sem alterar o estilo compartilhado. */
 .site-header-button-logout {
   border-color: var(--site-line);
-  color: #9f3a38;
+  color: #E28663;
 }
 
 /* Reduz espaços e permite quebra de linha em telas estreitas. */

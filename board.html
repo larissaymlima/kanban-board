@@ -8,13 +8,20 @@
   <!-- Configura o layout para se adaptar à largura da tela. -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Define a cor sugerida para a interface do navegador em dispositivos móveis. -->
-  <meta name="theme-color" content="#f5f7f8">
+  <meta name="theme-color" content="#1C1816">
   <!-- Define o título da página do quadro. -->
   <title>Quadro Kanban</title>
   <!-- Carrega a identidade visual compartilhada do cabeçalho. -->
   <link rel="stylesheet" href="site-header.css">
   <!-- Carrega os estilos específicos da página do quadro. -->
   <link rel="stylesheet" href="board.css">
+  <script type="importmap">
+    {
+      "imports": {
+        "firebase/firestore": "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"
+      }
+    }
+  </script>
   <!-- Carrega as funções de tarefas, conta e sessão depois da leitura do HTML. -->
   <script type="module" src="board.js"></script>
   <!-- Evita a solicitação de um ícone padrão que não existe. -->
@@ -24,9 +31,9 @@
   <!-- Cabeçalho comum com a marca e os controles da conta autenticada. -->
   <header class="site-header">
     <div class="site-header-inner">
-      <a class="site-brand" href="index.html" aria-label="KanbanFlow - página inicial">
+      <a class="site-brand" href="index.html" aria-label="Task Byte - página inicial">
         <span class="site-brand-mark" aria-hidden="true">K</span>
-        <span>KanbanFlow</span>
+        <span>Task Byte</span>
       </a>
       <div class="site-header-actions">
         <div class="board-user" aria-label="Usuário autenticado">
@@ -41,59 +48,98 @@
   <!-- Limita a largura do conteúdo e organiza as áreas principais do quadro. -->
   <main class="app-shell">
     <!-- Exibe o título principal da área de tarefas. -->
-    <section class="board-topbar" aria-labelledby="page-title">
+    <section class="board-topbar" aria-labelledby="active-board-name">
       <div class="board-heading">
-        <h1 id="page-title">Quadro de tarefas</h1>
+        <h1 class="active-board-name" id="active-board-name">Carregando quadros...</h1>
+        <p class="board-role-badge" id="active-board-role" aria-live="polite"></p>
+      </div>
+      <div class="board-controls">
+        <label class="sr-only" for="board-selector">Selecionar quadro</label>
+        <select id="board-selector" disabled aria-label="Selecionar quadro">
+          <option value="">Carregando quadros...</option>
+        </select>
+        <button class="share-board-button received-invitations-button" id="received-invitations-button" type="button" hidden>
+          Convites recebidos
+        </button>
+        <button class="create-board-button" id="create-board-button" type="button" disabled>
+          <span aria-hidden="true">+</span> Novo quadro
+        </button>
+        <button class="share-board-button" id="share-board-button" type="button" hidden>
+          Compartilhar quadro
+        </button>
       </div>
     </section>
 
     <!-- Organiza as tarefas em colunas identificadas pelo status correspondente. -->
-    <section class="board" aria-label="Quadro Kanban de tarefas">
-      <!-- Coluna para tarefas ainda não iniciadas. -->
-      <section class="board-column" data-status="todo" aria-labelledby="heading-todo">
-        <header class="column-header">
-          <div class="column-title-wrap"><span class="column-indicator indicator-todo"></span><h2 id="heading-todo">A fazer</h2></div>
-          <span class="task-count" aria-label="0 tarefas">0</span>
-        </header>
-        <button class="column-add-task" type="button" data-status="todo" disabled><span aria-hidden="true">+</span> Nova Tarefa</button>
-        <div class="card-list" aria-label="Tarefas a fazer"></div>
-      </section>
-
-      <!-- Coluna para tarefas que estão sendo executadas. -->
-      <section class="board-column" data-status="progress" aria-labelledby="heading-progress">
-        <header class="column-header">
-          <div class="column-title-wrap"><span class="column-indicator indicator-progress"></span><h2 id="heading-progress">Em andamento</h2></div>
-          <span class="task-count" aria-label="0 tarefas">0</span>
-        </header>
-        <button class="column-add-task" type="button" data-status="progress" disabled><span aria-hidden="true">+</span> Nova Tarefa</button>
-        <div class="card-list" aria-label="Tarefas em andamento"></div>
-      </section>
-
-      <!-- Coluna para tarefas aguardando revisão. -->
-      <section class="board-column" data-status="review" aria-labelledby="heading-review">
-        <header class="column-header">
-          <div class="column-title-wrap"><span class="column-indicator indicator-review"></span><h2 id="heading-review">Em revisão</h2></div>
-          <span class="task-count" aria-label="0 tarefas">0</span>
-        </header>
-        <button class="column-add-task" type="button" data-status="review" disabled><span aria-hidden="true">+</span> Nova Tarefa</button>
-        <div class="card-list" aria-label="Tarefas em revisão"></div>
-      </section>
-
-      <!-- Coluna para tarefas concluídas. -->
-      <section class="board-column" data-status="done" aria-labelledby="heading-done">
-        <header class="column-header">
-          <div class="column-title-wrap"><span class="column-indicator indicator-done"></span><h2 id="heading-done">Concluído</h2></div>
-          <span class="task-count" aria-label="0 tarefas">0</span>
-        </header>
-        <button class="column-add-task" type="button" data-status="done" disabled><span aria-hidden="true">+</span> Nova Tarefa</button>
-        <div class="card-list" aria-label="Tarefas concluídas"></div>
-      </section>
+    <section class="board" id="board-columns" aria-label="Quadro Kanban de tarefas">
     </section>
     <!-- Mostra o estado da conexão e eventuais erros do Firebase de forma visível. -->
     <p class="board-status" id="board-status" role="status" aria-live="polite">Conectando ao Firebase...</p>
     <!-- Anuncia alterações do quadro para leitores de tela sem interferir na visualização. -->
     <p class="sr-only" id="board-announcement" aria-live="polite"></p>
   </main>
+
+  <!-- Janela modal para criar um quadro próprio. -->
+  <dialog class="task-dialog board-dialog" id="board-dialog" aria-labelledby="board-dialog-title">
+    <form id="board-form">
+      <div class="dialog-heading">
+        <h2 id="board-dialog-title">Criar quadro</h2>
+        <button class="close-dialog" type="button" id="close-board-dialog" aria-label="Fechar">×</button>
+      </div>
+      <label for="board-name">Nome do quadro</label>
+      <input id="board-name" name="name" type="text" maxlength="100" placeholder="Ex.: Projeto pessoal" required>
+      <p class="board-form-message" id="board-form-message" aria-live="polite"></p>
+      <div class="dialog-actions">
+        <button class="cancel-button" type="button" id="cancel-board-form">Cancelar</button>
+        <button class="add-task-button" type="submit" id="board-submit">Criar quadro</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog class="task-dialog share-dialog" id="share-dialog" aria-labelledby="share-dialog-title">
+    <div class="dialog-heading">
+      <h2 id="share-dialog-title">Compartilhar quadro</h2>
+      <button class="close-dialog" type="button" id="close-share-dialog" aria-label="Fechar">×</button>
+    </div>
+    <form id="share-form">
+      <label for="share-email">E-mail da conta</label>
+      <input id="share-email" name="email" type="email" maxlength="254" autocomplete="email" placeholder="nome@exemplo.com" required>
+      <label for="share-role">Permissão</label>
+      <select id="share-role" name="role">
+        <option value="editor">Editor</option>
+        <option value="reader">Leitor</option>
+      </select>
+      <p class="share-help">
+        Um convite pendente não concede acesso ao quadro. A pessoa convidada precisa entrar com essa conta e ter o e-mail verificado para aceitar.
+      </p>
+      <p class="share-message" id="share-invite-message" role="status" aria-live="polite"></p>
+      <div class="dialog-actions">
+        <button class="add-task-button" type="submit">Criar convite</button>
+      </div>
+    </form>
+    <section class="share-members-section" aria-labelledby="share-members-title">
+      <h3 id="share-members-title">Pessoas com acesso</h3>
+      <p class="share-message" id="share-members-status" role="status" aria-live="polite"></p>
+      <ul class="member-list" id="member-list"></ul>
+    </section>
+    <section class="share-members-section" aria-labelledby="pending-invitations-title">
+      <h3 id="pending-invitations-title">Convites pendentes</h3>
+      <p class="share-message" id="share-invitations-status" role="status" aria-live="polite"></p>
+      <ul class="member-list" id="pending-invitation-list"></ul>
+    </section>
+  </dialog>
+
+  <dialog class="task-dialog share-dialog received-invitations-dialog" id="received-invitations-dialog" aria-labelledby="received-invitations-title">
+    <div class="dialog-heading">
+      <h2 id="received-invitations-title">Convites recebidos</h2>
+      <button class="close-dialog" type="button" id="close-received-invitations" aria-label="Fechar">×</button>
+    </div>
+    <p class="share-help">
+      Somente convites enviados ao e-mail verificado desta conta aparecem aqui.
+    </p>
+    <p class="share-message" id="received-invitations-status" role="status" aria-live="polite"></p>
+    <ul class="member-list" id="received-invitations-list"></ul>
+  </dialog>
 
   <!-- Janela modal reutilizada para adicionar e editar tarefas. -->
   <dialog class="task-dialog" id="task-dialog" aria-labelledby="dialog-title">
