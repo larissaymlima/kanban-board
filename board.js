@@ -86,6 +86,12 @@ const taskDetailColumn = document.querySelector("#task-detail-column");
 const taskDetailRole = document.querySelector("#task-detail-role");
 const taskDetailBack = document.querySelector("#task-detail-back");
 const taskDetailEditButton = document.querySelector("#task-detail-edit");
+const taskComments = document.querySelector("#task-comments");
+const taskCommentsStatus = document.querySelector("#task-comments-status");
+const taskCommentList = document.querySelector("#task-comment-list");
+const taskCommentForm = document.querySelector("#task-comment-form");
+const taskCommentText = document.querySelector("#task-comment-text");
+const taskCommentSubmit = document.querySelector("#task-comment-submit");
 const deleteDialog = document.querySelector("#delete-dialog");
 const deleteMessage = document.querySelector("#delete-confirmation-message");
 const boardDialog = document.querySelector("#board-dialog");
@@ -111,6 +117,7 @@ let pendingDeleteTaskId = null;
 let boardReady = false;
 let taskDetailColumnName = "";
 let stopTasksListener = null;
+let stopCommentsListener = null;
 
 if (taskRoute) {
   document.body.classList.add("task-detail-page");
@@ -254,17 +261,109 @@ function renderTaskDetail(task, columnName) {
   taskDetailEditButton.hidden = !canEditTasks();
   taskDetailBack.href = new URL("board.html", document.baseURI).href;
   taskDetailCard.hidden = false;
+  taskComments.hidden = false;
+  taskCommentForm.hidden = !canEditTasks();
   taskDetailStatus.textContent = "";
   taskDetailStatus.classList.remove("is-error");
+}
+
+function taskCommentsCollection() {
+  return collection(
+    db,
+    "boards",
+    currentBoard.id,
+    "tasks",
+    taskRoute.taskId,
+    "comments"
+  );
+}
+
+function commentTimestampMillis(timestamp) {
+  return timestamp && typeof timestamp.toMillis === "function"
+    ? timestamp.toMillis()
+    : Number.MAX_SAFE_INTEGER;
+}
+
+function formatCommentDate(timestamp) {
+  if (!timestamp || typeof timestamp.toDate !== "function") return "Publicando...";
+  return new Intl.DateTimeFormat("pt-BR", {
+    dateStyle: "short",
+    timeStyle: "short"
+  }).format(timestamp.toDate());
+}
+
+function renderTaskComments(snapshot) {
+  const comments = snapshot.docs
+    .map((commentDocument) => ({
+      ...commentDocument.data(),
+      id: commentDocument.id
+    }))
+    .sort((left, right) =>
+      commentTimestampMillis(left.createdAt) - commentTimestampMillis(right.createdAt) ||
+      left.id.localeCompare(right.id)
+    );
+
+  taskCommentList.replaceChildren();
+  comments.forEach((comment) => {
+    if (typeof comment.text !== "string") return;
+    const item = document.createElement("li");
+    item.className = "task-comment";
+
+    const header = document.createElement("div");
+    header.className = "task-comment-header";
+    const author = document.createElement("strong");
+    author.textContent = typeof comment.authorName === "string" && comment.authorName.trim()
+      ? comment.authorName.trim()
+      : "Usuário";
+    const date = document.createElement("time");
+    date.dateTime = comment.createdAt && typeof comment.createdAt.toDate === "function"
+      ? comment.createdAt.toDate().toISOString()
+      : "";
+    date.textContent = formatCommentDate(comment.createdAt);
+    header.append(author, date);
+
+    const text = document.createElement("p");
+    text.textContent = comment.text;
+    item.append(header, text);
+    taskCommentList.append(item);
+  });
+
+  taskCommentsStatus.textContent = comments.length
+    ? ""
+    : "Ainda não há comentários nesta tarefa.";
+  taskCommentsStatus.classList.remove("is-error");
+}
+
+function listenToTaskComments() {
+  stopCommentsListener?.();
+  taskCommentList.replaceChildren();
+  taskCommentsStatus.textContent = "Carregando comentários...";
+  taskCommentsStatus.classList.remove("is-error");
+  taskComments.hidden = false;
+  taskCommentForm.hidden = !canEditTasks();
+
+  stopCommentsListener = onSnapshot(taskCommentsCollection(), renderTaskComments, (error) => {
+    console.error("Erro ao carregar comentários da tarefa:", error);
+    if (error.code === "permission-denied") {
+      taskCommentList.replaceChildren();
+    }
+    taskCommentsStatus.textContent = error.code === "permission-denied"
+      ? "Você não tem permissão para visualizar os comentários desta tarefa."
+      : "Não foi possível carregar os comentários. Verifique sua conexão e tente novamente.";
+    taskCommentsStatus.classList.add("is-error");
+  });
 }
 
 function setTaskDetailStatus(message, isError = false) {
   taskDetailStatus.textContent = message;
   taskDetailStatus.classList.toggle("is-error", isError);
   taskDetailCard.hidden = true;
+  taskComments.hidden = true;
 }
 
 function denyTaskDetailAccess() {
+  stopCommentsListener?.();
+  stopCommentsListener = null;
   currentBoard = null;
   tasks = [];
   columns = [];
@@ -275,6 +374,8 @@ function denyTaskDetailAccess() {
   taskDetailColumn.textContent = "";
   taskDetailRole.textContent = "";
   taskDetailEditButton.hidden = true;
+  taskCommentList.replaceChildren();
+  taskComments.hidden = true;
   setTaskActionsEnabled(false);
   setTaskDetailStatus("Você não tem permissão para acessar esta tarefa.", true);
 }
@@ -337,6 +438,7 @@ async function openTaskDetail(user) {
     tasks = [task];
     setTaskActionsEnabled(true);
     renderTaskDetail(task, column.name);
+    listenToTaskComments();
   } catch (error) {
     console.error("Erro ao carregar a tarefa compartilhada:", error);
     if (error.code === "permission-denied") {
@@ -873,6 +975,36 @@ taskForm.addEventListener("submit", async (event) => {
 
 taskDetailEditButton.addEventListener("click", () => {
   if (taskRoute) openEditForm(taskRoute.taskId);
+});
+
+taskCommentForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (!boardReady || !currentUser || !currentBoard || !canEditTasks()) return;
+
+  const text = taskCommentText.value.trim();
+  if (!text || text.length > 2000) return;
+
+  taskCommentSubmit.disabled = true;
+  taskCommentsStatus.textContent = "Publicando comentário...";
+  taskCommentsStatus.classList.remove("is-error");
+  try {
+    await addDoc(taskCommentsCollection(), {
+      text,
+      authorUid: currentUser.uid,
+      authorName: (currentUser.displayName || "").trim().slice(0, 100) || "Usuário",
+      createdAt: serverTimestamp()
+    });
+    taskCommentForm.reset();
+    taskCommentsStatus.textContent = "Comentário publicado.";
+  } catch (error) {
+    console.error("Erro ao publicar comentário:", error);
+    taskCommentsStatus.textContent = error.code === "permission-denied"
+      ? "O Firestore negou a publicação. As regras para comentários precisam ser atualizadas."
+      : "Não foi possível publicar o comentário. Verifique sua conexão e tente novamente.";
+    taskCommentsStatus.classList.add("is-error");
+  } finally {
+    taskCommentSubmit.disabled = false;
+  }
 });
 
 // Fecha o formulário quando o usuário clica no fundo da janela modal.
@@ -1655,6 +1787,8 @@ onAuthStateChanged(auth, async (user) => {
   if (!user) {
     stopTasksListener?.();
     stopTasksListener = null;
+    stopCommentsListener?.();
+    stopCommentsListener = null;
     currentUser = null;
     currentBoard = null;
     syncShareButton();

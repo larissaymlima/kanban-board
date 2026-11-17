@@ -1143,6 +1143,119 @@ body.task-detail-page #board-status {
   font-size: 0.88rem;
 }
 
+.task-comments {
+  display: grid;
+  gap: 14px;
+  margin-top: 24px;
+  padding: clamp(18px, 4vw, 28px);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface);
+}
+
+.task-comments[hidden] {
+  display: none;
+}
+
+.task-comments h2 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 1.15rem;
+}
+
+.task-comments-status {
+  min-height: 1.3em;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+
+.task-comments-status.is-error {
+  color: #E28663;
+}
+
+.task-comment-list {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.task-comment {
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-raised);
+}
+
+.task-comment-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px 12px;
+}
+
+.task-comment-header strong {
+  color: var(--ink);
+  font-size: 0.88rem;
+  overflow-wrap: anywhere;
+}
+
+.task-comment-header time {
+  color: var(--muted);
+  font-size: 0.76rem;
+}
+
+.task-comment > p {
+  margin: 10px 0 0;
+  color: var(--ink);
+  font-size: 0.88rem;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.task-comment-form {
+  display: grid;
+  gap: 10px;
+  padding-top: 6px;
+}
+
+.task-comment-form[hidden] {
+  display: none;
+}
+
+.task-comment-form label {
+  color: var(--ink);
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.task-comment-form textarea {
+  width: 100%;
+  min-height: 90px;
+  resize: vertical;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-raised);
+  color: var(--ink);
+  line-height: 1.5;
+}
+
+.task-comment-form .add-task-button {
+  justify-self: start;
+}
+
+.task-comment-form button:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
 .member-remove-button {
   border-color: rgba(200, 90, 50, 0.42);
   color: #E28663;
