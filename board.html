@@ -9,6 +9,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Define a cor sugerida para a interface do navegador em dispositivos móveis. -->
   <meta name="theme-color" content="#1C1816">
+  <script>
+    const taskRouteBase = window.location.pathname.match(/^(.*\/)tasks\/[^/]+\/?$/);
+    if (taskRouteBase) {
+      const appBase = document.createElement("base");
+      appBase.href = new URL(taskRouteBase[1] || "/", window.location.origin).href;
+      document.head.append(appBase);
+    }
+  </script>
   <!-- Define o título da página do quadro. -->
   <title>Quadro Kanban</title>
   <!-- Carrega a identidade visual compartilhada do cabeçalho. -->
@@ -54,10 +62,12 @@
         <p class="board-role-badge" id="active-board-role" aria-live="polite"></p>
       </div>
       <div class="board-controls">
-        <label class="sr-only" for="board-selector">Selecionar quadro</label>
-        <select id="board-selector" disabled aria-label="Selecionar quadro">
-          <option value="">Carregando quadros...</option>
-        </select>
+        <div class="board-picker">
+          <label for="board-selector">Abrir quadro</label>
+          <select id="board-selector" disabled aria-label="Abrir quadro">
+            <option value="">Carregando quadros...</option>
+          </select>
+        </div>
         <button class="share-board-button received-invitations-button" id="received-invitations-button" type="button" hidden>
           Convites recebidos
         </button>
@@ -67,10 +77,25 @@
         <button class="share-board-button" id="share-board-button" type="button" hidden>
           Compartilhar quadro
         </button>
+        <button class="share-board-button delete-board-button" id="delete-board-button" type="button" hidden disabled>
+          Excluir quadro
+        </button>
       </div>
     </section>
 
     <!-- Organiza as tarefas em colunas identificadas pelo status correspondente. -->
+    <section class="task-detail" id="task-detail" aria-labelledby="task-detail-title" hidden>
+      <a class="task-detail-back" id="task-detail-back" href="board.html">Voltar ao quadro</a>
+      <p class="board-status" id="task-detail-status" role="status" aria-live="polite">Carregando tarefa...</p>
+      <article class="task-detail-card" id="task-detail-card" hidden>
+        <p class="task-detail-board" id="task-detail-board"></p>
+        <h1 id="task-detail-title"></h1>
+        <p class="task-detail-description" id="task-detail-description"></p>
+        <p class="task-detail-column" id="task-detail-column"></p>
+        <p class="board-role-badge" id="task-detail-role"></p>
+        <button class="add-task-button" id="task-detail-edit" type="button" hidden>Editar tarefa</button>
+      </article>
+    </section>
     <section class="board" id="board-columns" aria-label="Quadro Kanban de tarefas">
     </section>
     <!-- Mostra o estado da conexão e eventuais erros do Firebase de forma visível. -->
@@ -109,9 +134,6 @@
         <option value="editor">Editor</option>
         <option value="reader">Leitor</option>
       </select>
-      <p class="share-help">
-        Um convite pendente não concede acesso ao quadro. A pessoa convidada precisa entrar com essa conta e ter o e-mail verificado para aceitar.
-      </p>
       <p class="share-message" id="share-invite-message" role="status" aria-live="polite"></p>
       <div class="dialog-actions">
         <button class="add-task-button" type="submit">Criar convite</button>
@@ -134,9 +156,6 @@
       <h2 id="received-invitations-title">Convites recebidos</h2>
       <button class="close-dialog" type="button" id="close-received-invitations" aria-label="Fechar">×</button>
     </div>
-    <p class="share-help">
-      Somente convites enviados ao e-mail verificado desta conta aparecem aqui.
-    </p>
     <p class="share-message" id="received-invitations-status" role="status" aria-live="polite"></p>
     <ul class="member-list" id="received-invitations-list"></ul>
   </dialog>

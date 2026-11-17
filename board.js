@@ -16,7 +16,9 @@ import {
   collection,
   deleteDoc,
   doc,
+  getDoc,
   getDocs,
+  onSnapshot,
   serverTimestamp,
   setDoc,
   updateDoc
@@ -24,6 +26,7 @@ import {
 import {
   createBoard,
   createBoardInvitation,
+  deleteOwnedBoard,
   ensureInitialBoardAndMigrate,
   loadBoardInvitations,
   loadAccessibleBoards,
@@ -36,6 +39,24 @@ import {
   updateBoardMemberRole
 } from "./board-store.js";
 
+function getTaskRouteFromLocation() {
+  const match = window.location.pathname.match(/(?:^|\/)tasks\/([^/]+)\/?$/);
+  if (!match) return null;
+
+  let taskId = "";
+  try {
+    taskId = decodeURIComponent(match[1]);
+  } catch (error) {
+    console.error("A URL da tarefa contém um identificador inválido:", error);
+  }
+
+  return {
+    taskId,
+    boardId: new URLSearchParams(window.location.search).get("boardId") || ""
+  };
+}
+
+const taskRoute = getTaskRouteFromLocation();
 let currentUser = null;
 let currentBoard = null;
 let boards = [];
@@ -46,12 +67,23 @@ const activeBoardName = document.querySelector("#active-board-name");
 const activeBoardRole = document.querySelector("#active-board-role");
 const createBoardButton = document.querySelector("#create-board-button");
 const shareBoardButton = document.querySelector("#share-board-button");
+const deleteBoardButton = document.querySelector("#delete-board-button");
 const editAccountButton = document.querySelector("#edit-account-button");
 // Referências aos formulários, caixas de diálogo e avisos acessíveis do quadro.
 const dialog = document.querySelector("#task-dialog");
 const taskForm = document.querySelector("#task-form");
 const announcement = document.querySelector("#board-announcement");
 const boardStatus = document.querySelector("#board-status");
+const taskDetail = document.querySelector("#task-detail");
+const taskDetailStatus = document.querySelector("#task-detail-status");
+const taskDetailCard = document.querySelector("#task-detail-card");
+const taskDetailBoard = document.querySelector("#task-detail-board");
+const taskDetailTitle = document.querySelector("#task-detail-title");
+const taskDetailDescription = document.querySelector("#task-detail-description");
+const taskDetailColumn = document.querySelector("#task-detail-column");
+const taskDetailRole = document.querySelector("#task-detail-role");
+const taskDetailBack = document.querySelector("#task-detail-back");
+const taskDetailEditButton = document.querySelector("#task-detail-edit");
 const deleteDialog = document.querySelector("#delete-dialog");
 const deleteMessage = document.querySelector("#delete-confirmation-message");
 const boardDialog = document.querySelector("#board-dialog");
@@ -75,6 +107,13 @@ let draggedTaskId = null;
 let editingTaskId = null;
 let pendingDeleteTaskId = null;
 let boardReady = false;
+let taskDetailColumnName = "";
+let stopTasksListener = null;
+
+if (taskRoute) {
+  document.body.classList.add("task-detail-page");
+  taskDetail.hidden = false;
+}
 
 // Constrói a coleção de tarefas dentro do quadro ativo.
 function tasksCollection(boardId = currentBoard.id) {
@@ -85,7 +124,17 @@ function canEditTasks() {
   return currentBoard?.role === "owner" || currentBoard?.role === "editor";
 }
 
+function getReadOnlyRoleMessage() {
+  return "Seu perfil atual é Leitor e não permite criar, editar, mover ou excluir tarefas. Solicite ao proprietário a alteração do seu perfil para Editor e aguarde a aprovação.";
+}
+
 function canManageMembers() {
+  return Boolean(currentUser &&
+    currentBoard?.role === "owner" &&
+    currentBoard.ownerUid === currentUser.uid);
+}
+
+function canDeleteCurrentBoard() {
   return Boolean(currentUser &&
     currentBoard?.role === "owner" &&
     currentBoard.ownerUid === currentUser.uid);
@@ -93,24 +142,29 @@ function canManageMembers() {
 
 function syncShareButton() {
   shareBoardButton.hidden = !canManageMembers();
+  deleteBoardButton.hidden = !canDeleteCurrentBoard();
 }
 
 function syncReceivedInvitationsButton() {
   receivedInvitationsButton.hidden = !currentUser;
 }
 
-async function getVerifiedInvitationUser() {
-  if (!currentUser) {
+async function getInvitationUser() {
+  const user = auth.currentUser;
+  if (!user || !user.uid) {
     throw new Error("Entre na sua conta para acessar os convites.");
   }
 
-  await reload(currentUser);
-  if (!currentUser.email || !currentUser.emailVerified) {
-    throw new Error("Verifique o e-mail da sua conta antes de consultar ou aceitar convites.");
+  await reload(user);
+  if (auth.currentUser?.uid !== user.uid) {
+    throw new Error("A sessão mudou. Entre novamente para acessar os convites.");
+  }
+  if (!user.email) {
+    throw new Error("A conta autenticada não possui um endereço de e-mail.");
   }
 
-  await currentUser.getIdToken(true);
-  return currentUser;
+  await user.getIdToken(true);
+  return user;
 }
 
 function getRoleLabel(role) {
@@ -134,20 +188,146 @@ function isValidTask(task) {
 let tasks = [];
 
 // Busca os documentos da coleção do quadro ativo.
-async function loadTasks() {
-  const snapshot = await getDocs(tasksCollection());
-  const loadedTasks = snapshot.docs.map((taskDocument) => ({
-    ...taskDocument.data(),
-    id: taskDocument.id
-  }));
-  if (!loadedTasks.every(isValidTask)) {
-    throw new Error("O Firestore contém dados de tarefa em formato inválido.");
+function loadTasks() {
+  stopTasksListener?.();
+  return new Promise((resolve, reject) => {
+    let waitingForFirstSnapshot = true;
+    const unsubscribe = onSnapshot(tasksCollection(), (snapshot) => {
+      const loadedTasks = snapshot.docs.map((taskDocument) => ({
+        ...taskDocument.data(),
+        id: taskDocument.id
+      }));
+      if (!loadedTasks.every(isValidTask)) {
+        const error = new Error("O Firestore contém dados de tarefa em formato inválido.");
+        if (waitingForFirstSnapshot) {
+          waitingForFirstSnapshot = false;
+          unsubscribe();
+          stopTasksListener = null;
+          reject(error);
+        } else {
+          reportFirestoreError("carregar", error);
+        }
+        return;
+      }
+
+      tasks = loadedTasks.map((task) => ({
+        ...task,
+        description: typeof task.description === "string" ? task.description : ""
+      }));
+      renderBoard();
+      if (waitingForFirstSnapshot) {
+        waitingForFirstSnapshot = false;
+        resolve();
+      }
+    }, (error) => {
+      if (waitingForFirstSnapshot) {
+        waitingForFirstSnapshot = false;
+        stopTasksListener = null;
+        reject(error);
+      } else {
+        reportFirestoreError("carregar", error);
+      }
+    });
+    stopTasksListener = unsubscribe;
+  });
+}
+
+function taskDetailUrl(boardId, taskId) {
+  const url = new URL(`tasks/${encodeURIComponent(taskId)}`, window.location.href);
+  url.searchParams.set("boardId", boardId);
+  return url.href;
+}
+
+function renderTaskDetail(task, columnName) {
+  taskDetailColumnName = columnName;
+  taskDetailBoard.textContent = currentBoard.name;
+  taskDetailTitle.textContent = task.title;
+  taskDetailDescription.textContent = task.description || "Sem descrição.";
+  taskDetailColumn.textContent = `Lista: ${columnName}`;
+  taskDetailRole.textContent = getRoleLabel(currentBoard.role);
+  taskDetailRole.dataset.role = currentBoard.role;
+  taskDetailEditButton.hidden = !canEditTasks();
+  const boardUrl = new URL("../board.html", window.location.href);
+  boardUrl.searchParams.set("boardId", currentBoard.id);
+  taskDetailBack.href = boardUrl.href;
+  taskDetailCard.hidden = false;
+  taskDetailStatus.textContent = "";
+  taskDetailStatus.classList.remove("is-error");
+}
+
+function setTaskDetailStatus(message, isError = false) {
+  taskDetailStatus.textContent = message;
+  taskDetailStatus.classList.toggle("is-error", isError);
+  taskDetailCard.hidden = true;
+}
+
+async function openTaskDetail(user) {
+  if (!taskRoute?.taskId || !taskRoute.boardId) {
+    setTaskDetailStatus("O link da tarefa está incompleto ou inválido.", true);
+    return;
   }
-  tasks = loadedTasks.map((task) => ({
-    ...task,
-    description: typeof task.description === "string" ? task.description : ""
-  }));
-  renderBoard();
+
+  try {
+    const boardSnapshot = await getDoc(doc(db, "boards", taskRoute.boardId));
+    if (!boardSnapshot.exists()) {
+      setTaskDetailStatus("O quadro desta tarefa não foi encontrado.", true);
+      return;
+    }
+
+    const boardData = boardSnapshot.data();
+    let role = "owner";
+    if (boardData.ownerUid !== user.uid) {
+      const memberSnapshot = await getDoc(
+        doc(db, "boards", taskRoute.boardId, "members", user.uid)
+      );
+      if (!memberSnapshot.exists() ||
+          memberSnapshot.data().uid !== user.uid ||
+          !["editor", "reader"].includes(memberSnapshot.data().role)) {
+        setTaskDetailStatus("Você não tem acesso a esta tarefa.", true);
+        return;
+      }
+      role = memberSnapshot.data().role;
+    }
+
+    currentBoard = {
+      ...boardData,
+      id: taskRoute.boardId,
+      role
+    };
+    const taskSnapshot = await getDoc(
+      doc(db, "boards", taskRoute.boardId, "tasks", taskRoute.taskId)
+    );
+    if (!taskSnapshot.exists()) {
+      setTaskDetailStatus("Esta tarefa não existe mais neste quadro.", true);
+      return;
+    }
+
+    const boardColumns = await loadBoardColumns(db, taskRoute.boardId);
+    const task = {
+      ...taskSnapshot.data(),
+      id: taskSnapshot.id,
+      description: typeof taskSnapshot.data().description === "string"
+        ? taskSnapshot.data().description
+        : ""
+    };
+    const column = boardColumns.find((item) => item.id === task.columnId);
+    if (typeof task.title !== "string" || !column) {
+      setTaskDetailStatus("Os dados desta tarefa ou da lista associada são inválidos.", true);
+      return;
+    }
+
+    tasks = [task];
+    setTaskActionsEnabled(true);
+    renderTaskDetail(task, column.name);
+  } catch (error) {
+    console.error("Erro ao carregar a tarefa compartilhada:", error);
+    setTaskDetailStatus(
+      error.code === "permission-denied"
+        ? "Você não tem permissão para visualizar esta tarefa."
+        : "Não foi possível carregar a tarefa. Verifique sua conexão e tente novamente.",
+      true
+    );
+  }
 }
 
 function setTaskActionsEnabled(enabled) {
@@ -163,6 +343,7 @@ function setBoardControlsEnabled(enabled) {
   boardSelector.disabled = !enabled;
   createBoardButton.disabled = !enabled;
   editAccountButton.disabled = !enabled;
+  deleteBoardButton.disabled = !enabled || !canDeleteCurrentBoard();
 }
 
 function selectedBoardStorageKey(userId) {
@@ -181,6 +362,10 @@ function saveSelectedBoard(boardId) {
 
 function getPreferredBoard(availableBoards, userId) {
   try {
+    const requestedBoardId = new URLSearchParams(window.location.search).get("boardId");
+    const requestedBoard = availableBoards.find((board) => board.id === requestedBoardId);
+    if (requestedBoard) return requestedBoard;
+
     const savedBoardId = localStorage.getItem(selectedBoardStorageKey(userId));
     const savedBoard = availableBoards.find((board) => board.id === savedBoardId);
     if (savedBoard) return savedBoard;
@@ -193,17 +378,33 @@ function getPreferredBoard(availableBoards, userId) {
 
 function renderBoardSelector() {
   boardSelector.replaceChildren();
-  boards.forEach((board) => {
-    const option = document.createElement("option");
-    option.value = board.id;
-    option.textContent = board.name;
-    boardSelector.append(option);
+  const ownedBoards = boards.filter((board) => board.role === "owner");
+  const collaboratedBoards = boards.filter((board) => board.role !== "owner");
+
+  [
+    { label: "Meus projetos", projects: ownedBoards },
+    { label: "Projetos como colaborador", projects: collaboratedBoards }
+  ].forEach(({ label, projects }) => {
+    if (projects.length === 0) return;
+
+    const group = document.createElement("optgroup");
+    group.label = label;
+    projects.forEach((board) => {
+      const option = document.createElement("option");
+      option.value = board.id;
+      option.textContent = board.name;
+      group.append(option);
+    });
+    boardSelector.append(group);
   });
+
   boardSelector.disabled = boards.length === 0;
   if (currentBoard) boardSelector.value = currentBoard.id;
 }
 
 async function openBoard(board, rememberSelection = true) {
+  stopTasksListener?.();
+  stopTasksListener = null;
   const previousBoardId = currentBoard?.id;
   currentBoard = board;
   if (shareDialog.open && previousBoardId !== board.id) closeShareDialog();
@@ -215,6 +416,7 @@ async function openBoard(board, rememberSelection = true) {
   setBoardControlsEnabled(false);
   setTaskActionsEnabled(false);
   boardStatus.classList.remove("is-error");
+  boardStatus.classList.remove("is-warning");
   boardStatus.textContent = "Carregando o quadro...";
 
   const selectionSaved = !rememberSelection || saveSelectedBoard(board.id);
@@ -230,9 +432,12 @@ async function openBoard(board, rememberSelection = true) {
     renderBoard();
     await loadTasks();
     boardStatus.textContent = selectionSaved
-      ? ""
-      : "O quadro foi aberto, mas não será lembrado neste navegador.";
+      ? (board.role === "reader" ? getReadOnlyRoleMessage() : "")
+      : `O quadro foi aberto, mas não será lembrado neste navegador.${board.role === "reader"
+        ? ` ${getReadOnlyRoleMessage()}`
+        : ""}`;
     boardStatus.classList.toggle("is-error", !selectionSaved);
+    boardStatus.classList.toggle("is-warning", selectionSaved && board.role === "reader");
     setTaskActionsEnabled(true);
   } catch (error) {
     console.error("Erro ao carregar o quadro selecionado:", error);
@@ -240,6 +445,7 @@ async function openBoard(board, rememberSelection = true) {
       ? "Você não tem permissão para acessar este quadro."
       : error.message || "Não foi possível carregar o quadro. Verifique a conexão.";
     boardStatus.classList.add("is-error");
+    boardStatus.classList.remove("is-warning");
     announcement.textContent = boardStatus.textContent;
   }
 
@@ -251,16 +457,38 @@ async function openBoard(board, rememberSelection = true) {
 function reportFirestoreError(action, error) {
   console.error(`Erro ao ${action} no Firestore:`, error);
   const reason = error.code === "permission-denied"
-    ? "O Firestore negou o acesso. Publique as regras do arquivo firestore.rules no projeto Firebase."
+    ? "Seu perfil atual não permite esta alteração. Solicite ao proprietário a mudança do seu perfil e aguarde a aprovação."
     : error.code === "unavailable"
       ? "O Firebase está indisponível. Verifique sua conexão com a internet."
       : error.code === "not-found"
         ? "O banco Firestore ainda não foi criado neste projeto."
         : "Confira a conexão e as configurações do Firebase.";
+  if (error.code === "permission-denied" && action === "mover") {
+    const title = "Movimentação não permitida";
+    const details = "Seu perfil atual não permite mover tarefas. Peça ao proprietário para alterar seu perfil para Editor e aguarde a aprovação.";
+    const message = `${title}. ${details}`;
+    announcement.textContent = message;
+    const titleElement = document.createElement("strong");
+    titleElement.textContent = title;
+    const detailsElement = document.createElement("span");
+    detailsElement.textContent = details;
+    boardStatus.replaceChildren(titleElement, detailsElement);
+    boardStatus.classList.remove("is-error");
+    boardStatus.classList.add("is-warning");
+    return;
+  }
+
   const message = `Não foi possível ${action} a tarefa. ${reason}`;
   announcement.textContent = message;
+  if (taskRoute) {
+    taskDetailStatus.textContent = message;
+    taskDetailStatus.classList.add("is-error");
+    return;
+  }
+
   boardStatus.textContent = message;
   boardStatus.classList.add("is-error");
+  boardStatus.classList.remove("is-warning");
 }
 
 // Cria os elementos HTML e ações de um cartão de tarefa sem inserir HTML não confiável.
@@ -292,6 +520,14 @@ function createTaskCard(task) {
     card.append(description);
   }
 
+  const openLink = document.createElement("a");
+  openLink.className = "task-open-link";
+  openLink.href = taskDetailUrl(currentBoard.id, task.id);
+  openLink.target = "_blank";
+  openLink.rel = "noopener noreferrer";
+  openLink.textContent = "Abrir tarefa";
+  card.append(openLink);
+
   if (canEditTasks()) {
     const actions = document.createElement("div");
     actions.className = "task-actions";
@@ -314,7 +550,7 @@ function createTaskCard(task) {
 
   // Inicia o arraste apenas a partir do cartão, não dos botões internos.
   card.addEventListener("dragstart", (event) => {
-    if (!canEditTasks() || event.target.closest("button")) {
+    if (!canEditTasks() || event.target.closest("button, a")) {
       event.preventDefault();
       return;
     }
@@ -576,6 +812,13 @@ taskForm.addEventListener("submit", async (event) => {
 
     task.title = title;
     task.description = description;
+    if (taskRoute) {
+      renderTaskDetail(task, taskDetailColumnName);
+      announcement.textContent = `Tarefa "${title}" atualizada.`;
+      closeDialog();
+      return;
+    }
+
     renderBoard();
     announcement.textContent = `Tarefa "${title}" atualizada.`;
     closeDialog();
@@ -606,6 +849,10 @@ taskForm.addEventListener("submit", async (event) => {
   renderBoard();
   announcement.textContent = `Tarefa "${title}" adicionada em ${column.querySelector("h2").textContent}.`;
   closeDialog();
+});
+
+taskDetailEditButton.addEventListener("click", () => {
+  if (taskRoute) openEditForm(taskRoute.taskId);
 });
 
 // Fecha o formulário quando o usuário clica no fundo da janela modal.
@@ -661,6 +908,15 @@ function getMemberOperationError(error, action) {
   return error.message || `Não foi possível ${action}. Tente novamente.`;
 }
 
+function getMemberDisplayName(member) {
+  if (member.isOwner && currentUser?.uid === member.uid) {
+    return currentUser.displayName?.trim() || "Proprietário do quadro";
+  }
+  return member.name?.trim() || (member.isOwner
+    ? "Proprietário do quadro"
+    : "Nome não informado");
+}
+
 function renderMemberList(members) {
   memberList.replaceChildren();
 
@@ -672,9 +928,7 @@ function renderMemberList(members) {
     details.className = "member-details";
     const identity = document.createElement("span");
     identity.className = "member-identity";
-    identity.textContent = member.isOwner && currentUser?.uid === member.uid
-      ? currentUser.email || member.uid
-      : `UID: ${member.uid}`;
+    identity.textContent = getMemberDisplayName(member);
     details.append(identity);
 
     if (member.isOwner) {
@@ -691,7 +945,8 @@ function renderMemberList(members) {
     actions.className = "member-actions";
     const roleSelect = document.createElement("select");
     roleSelect.className = "member-role-select";
-    roleSelect.setAttribute("aria-label", `Papel do membro ${member.uid}`);
+    const memberName = getMemberDisplayName(member);
+    roleSelect.setAttribute("aria-label", `Papel de ${memberName}`);
     [
       { value: "editor", label: "Editor" },
       { value: "reader", label: "Leitor" }
@@ -720,7 +975,7 @@ function renderMemberList(members) {
     removeButton.className = "share-action-button member-remove-button";
     removeButton.type = "button";
     removeButton.textContent = "Remover";
-    removeButton.setAttribute("aria-label", `Remover acesso de ${member.uid}`);
+    removeButton.setAttribute("aria-label", `Remover acesso de ${memberName}`);
     removeButton.addEventListener("click", () => {
       void removeMemberAccess(member.uid, removeButton);
     });
@@ -876,7 +1131,7 @@ function renderReceivedInvitations() {
     boardName.textContent = invitation.boardName;
     const sender = document.createElement("span");
     sender.className = "invitation-metadata";
-    sender.textContent = `Enviado pelo UID ${invitation.ownerUid}`;
+    sender.textContent = `Enviado por ${invitation.ownerName || "proprietário do quadro"}`;
     const role = document.createElement("span");
     role.className = "member-role";
     role.textContent = `${getRoleLabel(invitation.role)} · ${formatInvitationDate(invitation.createdAt)}`;
@@ -910,7 +1165,7 @@ async function refreshReceivedInvitations(successMessage = "") {
   receivedInvitationsList.replaceChildren();
 
   try {
-    const user = await getVerifiedInvitationUser();
+    const user = await getInvitationUser();
     const invitations = await loadReceivedInvitations(db, user.email);
     if (!receivedInvitationsDialog.open || currentUser?.uid !== user.uid) return;
 
@@ -948,7 +1203,7 @@ async function respondToInvitation(invitation, response, actionButtons) {
   );
 
   try {
-    const user = await getVerifiedInvitationUser();
+    const user = await getInvitationUser();
     await respondToBoardInvitation(db, user, invitation, response);
     receivedInvitations = receivedInvitations.filter((item) =>
       item.id !== invitation.id || item.boardId !== invitation.boardId
@@ -1097,7 +1352,14 @@ async function submitShareInvitation(event) {
   setShareMessage(shareInviteMessage, "Criando convite...");
 
   try {
-    await createBoardInvitation(db, board, currentUser.uid, email, role);
+    await createBoardInvitation(
+      db,
+      board,
+      currentUser.uid,
+      email,
+      role,
+      currentUser.displayName
+    );
     shareForm.reset();
     setShareMessage(
       shareInviteMessage,
@@ -1327,12 +1589,52 @@ document.getElementById("logout-button").addEventListener("click", async () => {
   }
 });
 
+deleteBoardButton.addEventListener("click", async () => {
+  if (!canDeleteCurrentBoard()) return;
+
+  const boardToDelete = currentBoard;
+  if (!window.confirm(
+    `Excluir o quadro "${boardToDelete.name}" e todas as suas tarefas, colunas, membros e convites? Esta ação não pode ser desfeita.`
+  )) return;
+
+  deleteBoardButton.disabled = true;
+  boardStatus.classList.remove("is-error", "is-warning");
+  boardStatus.textContent = "Excluindo o quadro e os dados associados...";
+
+  try {
+    await deleteOwnedBoard(db, boardToDelete.id, currentUser.uid);
+    boards = await loadAccessibleBoards(db, currentUser.uid);
+    if (boards.length === 0) {
+      await createBoard(db, currentUser.uid, "Meu quadro");
+      boards = await loadAccessibleBoards(db, currentUser.uid);
+    }
+
+    renderBoardSelector();
+    const nextBoard = boards.find((board) => board.role === "owner") || boards[0];
+    if (!nextBoard) {
+      throw new Error("Nenhum quadro ficou disponível depois da exclusão.");
+    }
+
+    await openBoard(nextBoard);
+    boardStatus.textContent = "Quadro excluído.";
+  } catch (error) {
+    console.error("Erro ao excluir o quadro:", error);
+    boardStatus.textContent = error.code === "permission-denied"
+      ? "O Firestore negou a exclusão. As regras precisam permitir que o proprietário liste e exclua as subcoleções do quadro."
+      : error.message || "Não foi possível excluir o quadro.";
+    boardStatus.classList.add("is-error");
+    deleteBoardButton.disabled = false;
+  }
+});
+
 setBoardControlsEnabled(false);
 setTaskActionsEnabled(false);
 
 // Espera o Firebase restaurar a sessão antes de carregar os dados privados.
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
+    stopTasksListener?.();
+    stopTasksListener = null;
     currentUser = null;
     currentBoard = null;
     syncShareButton();
@@ -1350,10 +1652,13 @@ onAuthStateChanged(auth, async (user) => {
     setBoardControlsEnabled(false);
     setTaskActionsEnabled(false);
     boardStatus.textContent = "Sessão não encontrada. Redirecionando para o login...";
+    if (taskRoute) {
+      setTaskDetailStatus("Entre na sua conta para abrir esta tarefa.", true);
+    }
     window.location.replace("login.html");
     return;
   }
-
+  currentUser = user;
   currentUser = user;
   syncReceivedInvitationsButton();
   boardStatus.textContent = "Conectado. Preparando seus quadros...";
@@ -1370,6 +1675,11 @@ onAuthStateChanged(auth, async (user) => {
     .join("");
 
   try {
+    if (taskRoute) {
+      await openTaskDetail(user);
+      return;
+    }
+
     await ensureInitialBoardAndMigrate(db, user.uid);
     if (currentUser.uid !== user.uid) return;
 

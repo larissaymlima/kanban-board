@@ -120,6 +120,7 @@ export async function loadBoardMembers(db, boardId, ownerUid) {
 
     return {
       uid: member.uid,
+      name: typeof member.name === "string" ? member.name.trim() : "",
       role: member.role,
       addedAt: member.addedAt,
       isOwner: false
@@ -171,7 +172,7 @@ function mapInvitation(invitationDocument) {
   if (!boardReference ||
       boardReference.parent.id !== "boards" ||
       typeof invitation.email !== "string" ||
-      invitation.email !== invitation.email.toLowerCase() ||
+      invitation.email !== normalizeInvitationEmail(invitation.email) ||
       typeof invitation.ownerUid !== "string" ||
       typeof invitation.boardName !== "string" ||
       !["editor", "reader"].includes(invitation.role) ||
@@ -181,12 +182,13 @@ function mapInvitation(invitationDocument) {
 
   return {
     ...invitation,
+    ownerName: typeof invitation.ownerName === "string" ? invitation.ownerName.trim() : "",
     id: invitationDocument.id,
     boardId: boardReference.id
   };
 }
 
-export async function createBoardInvitation(db, board, ownerUid, email, role) {
+export async function createBoardInvitation(db, board, ownerUid, email, role, ownerName) {
   if (!board || board.ownerUid !== ownerUid) {
     throw new Error("Somente o proprietário pode convidar pessoas para este quadro.");
   }
@@ -205,6 +207,7 @@ export async function createBoardInvitation(db, board, ownerUid, email, role) {
     {
       email: normalizedEmail,
       ownerUid,
+      ownerName: typeof ownerName === "string" ? ownerName.trim() : "",
       boardName: board.name,
       role,
       status: "pending",
@@ -251,8 +254,8 @@ export async function cancelBoardInvitation(db, boardId, invitationId, ownerUid)
 }
 
 export async function respondToBoardInvitation(db, user, invitation, response) {
-  if (!user || !user.uid || !user.email || !user.emailVerified) {
-    throw new Error("Entre com uma conta cujo e-mail esteja verificado para responder ao convite.");
+  if (!user || !user.uid || !user.email) {
+    throw new Error("Entre em uma conta autenticada que possua um endereço de e-mail para responder ao convite.");
   }
   if (!["accepted", "declined"].includes(response)) {
     throw new Error("A resposta ao convite não é válida.");
@@ -284,7 +287,7 @@ export async function respondToBoardInvitation(db, user, invitation, response) {
     if (currentInvitation.status !== "pending") {
       throw new Error("Este convite já foi respondido ou cancelado.");
     }
-    if (currentInvitation.email !== normalizedEmail ||
+    if (normalizeInvitationEmail(currentInvitation.email) !== normalizedEmail ||
         !["editor", "reader"].includes(currentInvitation.role)) {
       throw new Error("Este convite não pertence à conta autenticada ou está inválido.");
     }
@@ -297,6 +300,7 @@ export async function respondToBoardInvitation(db, user, invitation, response) {
 
       transaction.set(memberReference, {
         uid: user.uid,
+        name: typeof user.displayName === "string" ? user.displayName.trim() : "",
         role: currentInvitation.role,
         addedAt: serverTimestamp(),
         invitationId: invitation.id
@@ -343,6 +347,40 @@ export async function createBoard(db, userId, name, boardId = doc(collection(db,
     name,
     ownerUid: userId
   };
+}
+
+export async function deleteOwnedBoard(db, boardId, ownerUid) {
+  if (!boardId || !ownerUid) {
+    throw new Error("Não foi possível identificar o quadro a excluir.");
+  }
+
+  const boardReference = doc(db, "boards", boardId);
+  const boardSnapshot = await getDoc(boardReference);
+  if (!boardSnapshot.exists() || boardSnapshot.data().ownerUid !== ownerUid) {
+    throw new Error("Somente o proprietário pode excluir este quadro.");
+  }
+
+  const childCollections = ["tasks", "members", "invitations"];
+  for (const collectionName of childCollections) {
+    const snapshot = await getDocs(collection(db, "boards", boardId, collectionName));
+    for (let offset = 0; offset < snapshot.docs.length; offset += 450) {
+      const batch = writeBatch(db);
+      snapshot.docs
+        .slice(offset, offset + 450)
+        .forEach((documentSnapshot) => batch.delete(documentSnapshot.ref));
+      await batch.commit();
+    }
+  }
+
+  const columnsSnapshot = await getDocs(collection(db, "boards", boardId, "columns"));
+  if (columnsSnapshot.size + 1 > 500) {
+    throw new Error("O quadro tem colunas demais para concluir a exclusão com segurança.");
+  }
+
+  const finalBatch = writeBatch(db);
+  columnsSnapshot.docs.forEach((columnDocument) => finalBatch.delete(columnDocument.ref));
+  finalBatch.delete(boardReference);
+  await finalBatch.commit();
 }
 
 function mapLegacyTask(taskDocument) {
