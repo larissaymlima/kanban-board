@@ -95,6 +95,18 @@
         <p class="board-role-badge" id="task-detail-role"></p>
         <button class="add-task-button" id="task-detail-edit" type="button" hidden>Editar tarefa</button>
       </article>
+      <section class="task-comments" id="task-comments" aria-labelledby="task-comments-title" hidden>
+        <h2 id="task-comments-title">Comentários</h2>
+        <p class="task-comments-status" id="task-comments-status" role="status" aria-live="polite">
+          Carregando comentários...
+        </p>
+        <ol class="task-comment-list" id="task-comment-list"></ol>
+        <form class="task-comment-form" id="task-comment-form" hidden>
+          <label for="task-comment-text">Escreva um comentário</label>
+          <textarea id="task-comment-text" name="text" rows="3" maxlength="2000" required></textarea>
+          <button class="add-task-button" id="task-comment-submit" type="submit">Publicar comentário</button>
+        </form>
+      </section>
     </section>
     <section class="board" id="board-columns" aria-label="Quadro Kanban de tarefas">
     </section>
