@@ -14,6 +14,7 @@ import { getAuthErrorMessage } from "./auth.js";
 import {
   addDoc,
   collection,
+  deleteField,
   deleteDoc,
   doc,
   getDoc,
@@ -126,6 +127,7 @@ let pendingDeleteTaskId = null;
 let boardReady = false;
 let taskDetailColumnName = "";
 let stopTasksListener = null;
+let stopColumnsListener = null;
 let stopCommentsListener = null;
 let stopBoardMembersListener = null;
 let boardMembers = [];
@@ -168,6 +170,56 @@ function canDeleteCurrentBoard() {
   return Boolean(currentUser &&
     currentBoard?.role === "owner" &&
     currentBoard.ownerUid === currentUser.uid);
+}
+
+function canManageWipLimits() {
+  return Boolean(currentUser &&
+    currentBoard?.role === "owner" &&
+    currentBoard.ownerUid === currentUser.uid);
+}
+
+function syncWipControls(enabled = boardReady) {
+  columns.forEach((column) => {
+    const isSaving = column.dataset.wipSaving === "true";
+    const input = column.querySelector(".column-wip-limit-input");
+    const saveButton = column.querySelector(".column-wip-save");
+    const removeButton = column.querySelector(".column-wip-remove");
+    if (input) input.disabled = !enabled || !canManageWipLimits() || isSaving;
+    if (saveButton) saveButton.disabled = !enabled || !canManageWipLimits() || isSaving;
+    if (removeButton) {
+      removeButton.disabled = !enabled ||
+        !canManageWipLimits() ||
+        isSaving ||
+        getColumnWipLimit(column) === null;
+    }
+  });
+}
+
+function getColumnWipLimit(column) {
+  const value = column?.dataset.wipLimit;
+  return value === undefined ? null : Number(value);
+}
+
+function getColumnTaskCount(columnId) {
+  return tasks.filter((task) => task.columnId === columnId).length;
+}
+
+function isWipLimitReached(columnId, excludingTaskId = null) {
+  const column = columns.find((item) => item.dataset.columnId === columnId);
+  const limit = getColumnWipLimit(column);
+  if (limit === null) return false;
+  const count = tasks.filter((task) =>
+    task.columnId === columnId && task.id !== excludingTaskId
+  ).length;
+  return count >= limit;
+}
+
+function clearWipWarning() {
+  if (boardStatus.classList.contains("is-warning") &&
+      /limite wip/i.test(boardStatus.textContent)) {
+    boardStatus.textContent = "";
+    boardStatus.classList.remove("is-warning");
+  }
 }
 
 function syncShareButton() {
@@ -733,6 +785,8 @@ function setTaskActionsEnabled(enabled) {
     button.disabled = !canEdit;
   });
   boardElement.classList.toggle("is-read-only", enabled && !canEdit);
+  updateTaskCounts();
+  syncWipControls(enabled);
 }
 
 function setBoardControlsEnabled(enabled) {
@@ -801,6 +855,8 @@ function renderBoardSelector() {
 async function openBoard(board, rememberSelection = true) {
   stopTasksListener?.();
   stopTasksListener = null;
+  stopColumnsListener?.();
+  stopColumnsListener = null;
   stopBoardMembersListener?.();
   stopBoardMembersListener = null;
   const previousBoardId = currentBoard?.id;
@@ -829,6 +885,7 @@ async function openBoard(board, rememberSelection = true) {
     }
 
     renderColumns(boardColumns);
+    startColumnWipListener(board.id);
     tasks = [];
     renderBoard();
     try {
@@ -1026,12 +1083,152 @@ function bindColumnEvents(column) {
   });
 }
 
+function updateColumnWipState(column, wipLimit) {
+  if (Number.isSafeInteger(wipLimit) && wipLimit >= 0) {
+    column.dataset.wipLimit = String(wipLimit);
+  } else {
+    delete column.dataset.wipLimit;
+  }
+
+  const limitInput = column.querySelector(".column-wip-limit-input");
+  if (limitInput && document.activeElement !== limitInput) {
+    limitInput.value = getColumnWipLimit(column) ?? "";
+  }
+  const removeButton = column.querySelector(".column-wip-remove");
+  if (removeButton) removeButton.disabled = getColumnWipLimit(column) === null;
+  updateTaskCounts();
+  syncWipControls();
+}
+
+async function saveColumnWipLimit(column, value) {
+  if (!canManageWipLimits() || !boardReady) return;
+  const input = column.querySelector(".column-wip-limit-input");
+  const saveButton = column.querySelector(".column-wip-save");
+  const removeButton = column.querySelector(".column-wip-remove");
+  const limit = value === null ? null : Number(value);
+  if (limit !== null &&
+      (value === "" || !Number.isSafeInteger(limit) || limit < 0)) {
+    boardStatus.textContent = "Informe um limite inteiro igual ou maior que zero.";
+    boardStatus.classList.add("is-error");
+    return;
+  }
+
+  column.dataset.wipSaving = "true";
+  saveButton.disabled = true;
+  removeButton.disabled = true;
+  input.disabled = true;
+  try {
+    await updateDoc(doc(db, "boards", currentBoard.id, "columns", column.dataset.columnId), {
+      wipLimit: limit === null ? deleteField() : limit
+    });
+    updateColumnWipState(column, limit);
+    clearWipWarning();
+    boardStatus.textContent = limit === null
+      ? "Limite WIP removido."
+      : `Limite WIP definido para ${column.querySelector("h2").textContent}.`;
+    boardStatus.classList.remove("is-error");
+  } catch (error) {
+    console.error("Erro ao salvar o limite WIP da coluna:", error);
+    boardStatus.textContent = error.code === "permission-denied"
+      ? "O Firestore não permitiu alterar o limite. Somente o proprietário pode configurar o WIP."
+      : "Não foi possível salvar o limite WIP. Verifique a conexão e tente novamente.";
+    boardStatus.classList.add("is-error");
+  } finally {
+    delete column.dataset.wipSaving;
+    syncWipControls();
+  }
+}
+
+function createColumnWipControls(column, boardColumn) {
+  const controls = document.createElement("form");
+  controls.className = "column-wip-controls";
+  controls.addEventListener("submit", (event) => {
+    event.preventDefault();
+    void saveColumnWipLimit(
+      column,
+      controls.querySelector(".column-wip-limit-input").value
+    );
+  });
+
+  const label = document.createElement("label");
+  label.className = "sr-only";
+  label.textContent = `Limite de tarefas para ${boardColumn.name}`;
+
+  const input = document.createElement("input");
+  input.className = "column-wip-limit-input";
+  input.type = "number";
+  input.min = "0";
+  input.step = "1";
+  input.inputMode = "numeric";
+  input.placeholder = "Sem limite";
+  input.value = Number.isSafeInteger(boardColumn.wipLimit) && boardColumn.wipLimit >= 0
+    ? String(boardColumn.wipLimit)
+    : "";
+  input.disabled = !boardReady || !canManageWipLimits();
+  label.htmlFor = `wip-limit-${boardColumn.id}`;
+  input.id = label.htmlFor;
+
+  const saveButton = document.createElement("button");
+  saveButton.className = "column-wip-save";
+  saveButton.type = "submit";
+  saveButton.textContent = "Salvar limite";
+  saveButton.hidden = !canManageWipLimits();
+  saveButton.disabled = !boardReady || !canManageWipLimits();
+
+  const removeButton = document.createElement("button");
+  removeButton.className = "column-wip-remove";
+  removeButton.type = "button";
+  removeButton.textContent = "Remover";
+  removeButton.disabled = !boardReady ||
+    !canManageWipLimits() ||
+    getColumnWipLimit(column) === null;
+  removeButton.hidden = !canManageWipLimits();
+  removeButton.addEventListener("click", () => {
+    void saveColumnWipLimit(column, null);
+  });
+
+  const limitLabel = document.createElement("span");
+  limitLabel.className = "column-wip-label";
+  limitLabel.textContent = "Máximo";
+  controls.append(limitLabel, label, input, saveButton, removeButton);
+  return controls;
+}
+
+function startColumnWipListener(boardId) {
+  stopColumnsListener?.();
+  const unsubscribe = onSnapshot(
+    collection(db, "boards", boardId, "columns"),
+    (snapshot) => {
+      if (currentBoard?.id !== boardId) return;
+      snapshot.docs.forEach((columnDocument) => {
+        const column = columns.find((item) => item.dataset.columnId === columnDocument.id);
+        if (!column) return;
+        const data = columnDocument.data();
+        const limit = Number.isSafeInteger(data.wipLimit) && data.wipLimit >= 0
+          ? data.wipLimit
+          : null;
+        updateColumnWipState(column, limit);
+      });
+    },
+    (error) => {
+      if (currentBoard?.id !== boardId) return;
+      console.error("Erro ao acompanhar os limites WIP:", error);
+      boardStatus.textContent = "Não foi possível atualizar os limites WIP das colunas.";
+      boardStatus.classList.add("is-error");
+    }
+  );
+  stopColumnsListener = unsubscribe;
+}
+
 function renderColumns(boardColumns) {
   boardElement.replaceChildren();
   columns = boardColumns.map((boardColumn, index) => {
     const column = document.createElement("section");
     column.className = "board-column";
     column.dataset.columnId = boardColumn.id;
+    if (Number.isSafeInteger(boardColumn.wipLimit) && boardColumn.wipLimit >= 0) {
+      column.dataset.wipLimit = String(boardColumn.wipLimit);
+    }
     column.setAttribute("aria-labelledby", `column-heading-${index}`);
 
     const header = document.createElement("header");
@@ -1053,6 +1250,9 @@ function renderColumns(boardColumns) {
     count.textContent = "0";
     count.setAttribute("aria-label", "0 tarefas");
     header.append(titleWrap, count);
+    if (canManageWipLimits()) {
+      header.append(createColumnWipControls(column, boardColumn));
+    }
 
     const addButton = document.createElement("button");
     addButton.className = "column-add-task";
@@ -1078,10 +1278,23 @@ function renderColumns(boardColumns) {
 // Atualiza os contadores visíveis e seus rótulos acessíveis em cada coluna.
 function updateTaskCounts() {
   columns.forEach((column) => {
-    const count = column.querySelector(".card-list").children.length;
+    const count = getColumnTaskCount(column.dataset.columnId);
+    const limit = getColumnWipLimit(column);
     const counter = column.querySelector(".task-count");
-    counter.textContent = count;
-    counter.setAttribute("aria-label", `${count} ${count === 1 ? "tarefa" : "tarefas"}`);
+    const reached = limit !== null && count >= limit;
+    counter.textContent = limit === null ? String(count) : `${count}/${limit}`;
+    counter.setAttribute(
+      "aria-label",
+      limit === null
+        ? `${count} ${count === 1 ? "tarefa" : "tarefas"}`
+        : `${count} de ${limit} tarefas${reached ? ", limite atingido" : ""}`
+    );
+    column.classList.toggle("is-wip-limit-reached", reached);
+    const addButton = column.querySelector(".column-add-task");
+    if (addButton) {
+      addButton.disabled = !boardReady || !canEditTasks() || reached;
+      addButton.title = reached ? "O limite desta coluna foi atingido." : "";
+    }
   });
 }
 
@@ -1102,6 +1315,14 @@ async function moveTask(card, column) {
   if (!boardReady || !canEditTasks()) return;
   const task = tasks.find((item) => item.id === card.dataset.taskId);
   if (!task || task.columnId === column.dataset.columnId) return;
+  if (isWipLimitReached(column.dataset.columnId, task.id)) {
+    const targetName = column.querySelector("h2").textContent;
+    boardStatus.textContent = `Não foi possível mover a tarefa: a coluna "${targetName}" atingiu o limite WIP.`;
+    boardStatus.classList.add("is-warning");
+    boardStatus.classList.remove("is-error");
+    announcement.textContent = boardStatus.textContent;
+    return;
+  }
 
   const updates = {
     columnId: column.dataset.columnId,
@@ -1123,6 +1344,7 @@ async function moveTask(card, column) {
     task.status = column.dataset.columnId;
   }
   renderBoard();
+  clearWipWarning();
   const heading = column.querySelector("h2").textContent;
   announcement.textContent = `Tarefa movida para ${heading}.`;
 }
@@ -1133,10 +1355,17 @@ renderBoard();
 // Prepara o formulário para adicionar tarefa na coluna acionada.
 function openTaskForm(event) {
   if (!boardReady || !canEditTasks()) return;
+  const columnId = event.currentTarget.dataset.columnId;
+  if (isWipLimitReached(columnId)) {
+    boardStatus.textContent = "O limite WIP desta coluna foi atingido. Remova ou mova uma tarefa antes de adicionar outra.";
+    boardStatus.classList.add("is-warning");
+    boardStatus.classList.remove("is-error");
+    return;
+  }
   editingTaskId = null;
   taskForm.reset();
   taskForm.dataset.mode = "create";
-  taskForm.dataset.columnId = event.currentTarget.dataset.columnId;
+  taskForm.dataset.columnId = columnId;
   document.querySelector("#dialog-title").textContent = "Adicionar tarefa";
   document.querySelector("#task-submit").textContent = "Adicionar tarefa";
   dialog.showModal();
@@ -1192,6 +1421,7 @@ async function confirmDeleteTask() {
 
   tasks = tasks.filter((item) => item.id !== task.id);
   renderBoard();
+  clearWipWarning();
   announcement.textContent = `Tarefa "${task.title}" excluída.`;
   closeDeleteDialog();
 }
@@ -1260,6 +1490,13 @@ taskForm.addEventListener("submit", async (event) => {
   // Para uma nova tarefa, confirma que o status selecionado corresponde a uma coluna.
   const column = columns.find((item) => item.dataset.columnId === taskForm.dataset.columnId);
   if (!title || !column) return;
+  if (isWipLimitReached(column.dataset.columnId)) {
+    closeDialog();
+    boardStatus.textContent = "O limite WIP desta coluna foi atingido. Remova ou mova uma tarefa antes de adicionar outra.";
+    boardStatus.classList.add("is-warning");
+    boardStatus.classList.remove("is-error");
+    return;
+  }
 
   // Cria um identificador único e adiciona a tarefa ao estado do quadro.
   const newTask = {
@@ -1279,6 +1516,7 @@ taskForm.addEventListener("submit", async (event) => {
 
   tasks.push({ ...newTask, id: newTaskReference.id });
   renderBoard();
+  clearWipWarning();
   announcement.textContent = `Tarefa "${title}" adicionada em ${column.querySelector("h2").textContent}.`;
   closeDialog();
 });
@@ -2140,6 +2378,8 @@ onAuthStateChanged(auth, async (user) => {
   if (!user) {
     stopTasksListener?.();
     stopTasksListener = null;
+    stopColumnsListener?.();
+    stopColumnsListener = null;
     stopCommentsListener?.();
     stopCommentsListener = null;
     stopBoardMembersListener?.();
