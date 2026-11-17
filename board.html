@@ -9,6 +9,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Define a cor sugerida para a interface do navegador em dispositivos móveis. -->
   <meta name="theme-color" content="#1C1816">
+  <script>
+    const taskRouteBase = window.location.pathname.match(/^(.*\/)tasks\/[^/]+\/?$/);
+    if (taskRouteBase) {
+      const appBase = document.createElement("base");
+      appBase.href = new URL(taskRouteBase[1] || "/", window.location.origin).href;
+      document.head.append(appBase);
+    }
+  </script>
   <!-- Define o título da página do quadro. -->
   <title>Quadro Kanban</title>
   <!-- Carrega a identidade visual compartilhada do cabeçalho. -->
@@ -76,6 +84,18 @@
     </section>
 
     <!-- Organiza as tarefas em colunas identificadas pelo status correspondente. -->
+    <section class="task-detail" id="task-detail" aria-labelledby="task-detail-title" hidden>
+      <a class="task-detail-back" id="task-detail-back" href="board.html">Voltar ao quadro</a>
+      <p class="board-status" id="task-detail-status" role="status" aria-live="polite">Carregando tarefa...</p>
+      <article class="task-detail-card" id="task-detail-card" hidden>
+        <p class="task-detail-board" id="task-detail-board"></p>
+        <h1 id="task-detail-title"></h1>
+        <p class="task-detail-description" id="task-detail-description"></p>
+        <p class="task-detail-column" id="task-detail-column"></p>
+        <p class="board-role-badge" id="task-detail-role"></p>
+        <button class="add-task-button" id="task-detail-edit" type="button" hidden>Editar tarefa</button>
+      </article>
+    </section>
     <section class="board" id="board-columns" aria-label="Quadro Kanban de tarefas">
     </section>
     <!-- Mostra o estado da conexão e eventuais erros do Firebase de forma visível. -->

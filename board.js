@@ -16,7 +16,9 @@ import {
   collection,
   deleteDoc,
   doc,
+  getDoc,
   getDocs,
+  onSnapshot,
   serverTimestamp,
   setDoc,
   updateDoc
@@ -37,6 +39,24 @@ import {
   updateBoardMemberRole
 } from "./board-store.js";
 
+function getTaskRouteFromLocation() {
+  const match = window.location.pathname.match(/(?:^|\/)tasks\/([^/]+)\/?$/);
+  if (!match) return null;
+
+  let taskId = "";
+  try {
+    taskId = decodeURIComponent(match[1]);
+  } catch (error) {
+    console.error("A URL da tarefa contém um identificador inválido:", error);
+  }
+
+  return {
+    taskId,
+    boardId: new URLSearchParams(window.location.search).get("boardId") || ""
+  };
+}
+
+const taskRoute = getTaskRouteFromLocation();
 let currentUser = null;
 let currentBoard = null;
 let boards = [];
@@ -54,6 +74,16 @@ const dialog = document.querySelector("#task-dialog");
 const taskForm = document.querySelector("#task-form");
 const announcement = document.querySelector("#board-announcement");
 const boardStatus = document.querySelector("#board-status");
+const taskDetail = document.querySelector("#task-detail");
+const taskDetailStatus = document.querySelector("#task-detail-status");
+const taskDetailCard = document.querySelector("#task-detail-card");
+const taskDetailBoard = document.querySelector("#task-detail-board");
+const taskDetailTitle = document.querySelector("#task-detail-title");
+const taskDetailDescription = document.querySelector("#task-detail-description");
+const taskDetailColumn = document.querySelector("#task-detail-column");
+const taskDetailRole = document.querySelector("#task-detail-role");
+const taskDetailBack = document.querySelector("#task-detail-back");
+const taskDetailEditButton = document.querySelector("#task-detail-edit");
 const deleteDialog = document.querySelector("#delete-dialog");
 const deleteMessage = document.querySelector("#delete-confirmation-message");
 const boardDialog = document.querySelector("#board-dialog");
@@ -77,6 +107,13 @@ let draggedTaskId = null;
 let editingTaskId = null;
 let pendingDeleteTaskId = null;
 let boardReady = false;
+let taskDetailColumnName = "";
+let stopTasksListener = null;
+
+if (taskRoute) {
+  document.body.classList.add("task-detail-page");
+  taskDetail.hidden = false;
+}
 
 // Constrói a coleção de tarefas dentro do quadro ativo.
 function tasksCollection(boardId = currentBoard.id) {
@@ -151,20 +188,146 @@ function isValidTask(task) {
 let tasks = [];
 
 // Busca os documentos da coleção do quadro ativo.
-async function loadTasks() {
-  const snapshot = await getDocs(tasksCollection());
-  const loadedTasks = snapshot.docs.map((taskDocument) => ({
-    ...taskDocument.data(),
-    id: taskDocument.id
-  }));
-  if (!loadedTasks.every(isValidTask)) {
-    throw new Error("O Firestore contém dados de tarefa em formato inválido.");
+function loadTasks() {
+  stopTasksListener?.();
+  return new Promise((resolve, reject) => {
+    let waitingForFirstSnapshot = true;
+    const unsubscribe = onSnapshot(tasksCollection(), (snapshot) => {
+      const loadedTasks = snapshot.docs.map((taskDocument) => ({
+        ...taskDocument.data(),
+        id: taskDocument.id
+      }));
+      if (!loadedTasks.every(isValidTask)) {
+        const error = new Error("O Firestore contém dados de tarefa em formato inválido.");
+        if (waitingForFirstSnapshot) {
+          waitingForFirstSnapshot = false;
+          unsubscribe();
+          stopTasksListener = null;
+          reject(error);
+        } else {
+          reportFirestoreError("carregar", error);
+        }
+        return;
+      }
+
+      tasks = loadedTasks.map((task) => ({
+        ...task,
+        description: typeof task.description === "string" ? task.description : ""
+      }));
+      renderBoard();
+      if (waitingForFirstSnapshot) {
+        waitingForFirstSnapshot = false;
+        resolve();
+      }
+    }, (error) => {
+      if (waitingForFirstSnapshot) {
+        waitingForFirstSnapshot = false;
+        stopTasksListener = null;
+        reject(error);
+      } else {
+        reportFirestoreError("carregar", error);
+      }
+    });
+    stopTasksListener = unsubscribe;
+  });
+}
+
+function taskDetailUrl(boardId, taskId) {
+  const url = new URL(`tasks/${encodeURIComponent(taskId)}`, window.location.href);
+  url.searchParams.set("boardId", boardId);
+  return url.href;
+}
+
+function renderTaskDetail(task, columnName) {
+  taskDetailColumnName = columnName;
+  taskDetailBoard.textContent = currentBoard.name;
+  taskDetailTitle.textContent = task.title;
+  taskDetailDescription.textContent = task.description || "Sem descrição.";
+  taskDetailColumn.textContent = `Lista: ${columnName}`;
+  taskDetailRole.textContent = getRoleLabel(currentBoard.role);
+  taskDetailRole.dataset.role = currentBoard.role;
+  taskDetailEditButton.hidden = !canEditTasks();
+  const boardUrl = new URL("../board.html", window.location.href);
+  boardUrl.searchParams.set("boardId", currentBoard.id);
+  taskDetailBack.href = boardUrl.href;
+  taskDetailCard.hidden = false;
+  taskDetailStatus.textContent = "";
+  taskDetailStatus.classList.remove("is-error");
+}
+
+function setTaskDetailStatus(message, isError = false) {
+  taskDetailStatus.textContent = message;
+  taskDetailStatus.classList.toggle("is-error", isError);
+  taskDetailCard.hidden = true;
+}
+
+async function openTaskDetail(user) {
+  if (!taskRoute?.taskId || !taskRoute.boardId) {
+    setTaskDetailStatus("O link da tarefa está incompleto ou inválido.", true);
+    return;
   }
-  tasks = loadedTasks.map((task) => ({
-    ...task,
-    description: typeof task.description === "string" ? task.description : ""
-  }));
-  renderBoard();
+
+  try {
+    const boardSnapshot = await getDoc(doc(db, "boards", taskRoute.boardId));
+    if (!boardSnapshot.exists()) {
+      setTaskDetailStatus("O quadro desta tarefa não foi encontrado.", true);
+      return;
+    }
+
+    const boardData = boardSnapshot.data();
+    let role = "owner";
+    if (boardData.ownerUid !== user.uid) {
+      const memberSnapshot = await getDoc(
+        doc(db, "boards", taskRoute.boardId, "members", user.uid)
+      );
+      if (!memberSnapshot.exists() ||
+          memberSnapshot.data().uid !== user.uid ||
+          !["editor", "reader"].includes(memberSnapshot.data().role)) {
+        setTaskDetailStatus("Você não tem acesso a esta tarefa.", true);
+        return;
+      }
+      role = memberSnapshot.data().role;
+    }
+
+    currentBoard = {
+      ...boardData,
+      id: taskRoute.boardId,
+      role
+    };
+    const taskSnapshot = await getDoc(
+      doc(db, "boards", taskRoute.boardId, "tasks", taskRoute.taskId)
+    );
+    if (!taskSnapshot.exists()) {
+      setTaskDetailStatus("Esta tarefa não existe mais neste quadro.", true);
+      return;
+    }
+
+    const boardColumns = await loadBoardColumns(db, taskRoute.boardId);
+    const task = {
+      ...taskSnapshot.data(),
+      id: taskSnapshot.id,
+      description: typeof taskSnapshot.data().description === "string"
+        ? taskSnapshot.data().description
+        : ""
+    };
+    const column = boardColumns.find((item) => item.id === task.columnId);
+    if (typeof task.title !== "string" || !column) {
+      setTaskDetailStatus("Os dados desta tarefa ou da lista associada são inválidos.", true);
+      return;
+    }
+
+    tasks = [task];
+    setTaskActionsEnabled(true);
+    renderTaskDetail(task, column.name);
+  } catch (error) {
+    console.error("Erro ao carregar a tarefa compartilhada:", error);
+    setTaskDetailStatus(
+      error.code === "permission-denied"
+        ? "Você não tem permissão para visualizar esta tarefa."
+        : "Não foi possível carregar a tarefa. Verifique sua conexão e tente novamente.",
+      true
+    );
+  }
 }
 
 function setTaskActionsEnabled(enabled) {
@@ -199,6 +362,10 @@ function saveSelectedBoard(boardId) {
 
 function getPreferredBoard(availableBoards, userId) {
   try {
+    const requestedBoardId = new URLSearchParams(window.location.search).get("boardId");
+    const requestedBoard = availableBoards.find((board) => board.id === requestedBoardId);
+    if (requestedBoard) return requestedBoard;
+
     const savedBoardId = localStorage.getItem(selectedBoardStorageKey(userId));
     const savedBoard = availableBoards.find((board) => board.id === savedBoardId);
     if (savedBoard) return savedBoard;
@@ -236,6 +403,8 @@ function renderBoardSelector() {
 }
 
 async function openBoard(board, rememberSelection = true) {
+  stopTasksListener?.();
+  stopTasksListener = null;
   const previousBoardId = currentBoard?.id;
   currentBoard = board;
   if (shareDialog.open && previousBoardId !== board.id) closeShareDialog();
@@ -311,6 +480,12 @@ function reportFirestoreError(action, error) {
 
   const message = `Não foi possível ${action} a tarefa. ${reason}`;
   announcement.textContent = message;
+  if (taskRoute) {
+    taskDetailStatus.textContent = message;
+    taskDetailStatus.classList.add("is-error");
+    return;
+  }
+
   boardStatus.textContent = message;
   boardStatus.classList.add("is-error");
   boardStatus.classList.remove("is-warning");
@@ -345,6 +520,14 @@ function createTaskCard(task) {
     card.append(description);
   }
 
+  const openLink = document.createElement("a");
+  openLink.className = "task-open-link";
+  openLink.href = taskDetailUrl(currentBoard.id, task.id);
+  openLink.target = "_blank";
+  openLink.rel = "noopener noreferrer";
+  openLink.textContent = "Abrir tarefa";
+  card.append(openLink);
+
   if (canEditTasks()) {
     const actions = document.createElement("div");
     actions.className = "task-actions";
@@ -367,7 +550,7 @@ function createTaskCard(task) {
 
   // Inicia o arraste apenas a partir do cartão, não dos botões internos.
   card.addEventListener("dragstart", (event) => {
-    if (!canEditTasks() || event.target.closest("button")) {
+    if (!canEditTasks() || event.target.closest("button, a")) {
       event.preventDefault();
       return;
     }
@@ -629,6 +812,13 @@ taskForm.addEventListener("submit", async (event) => {
 
     task.title = title;
     task.description = description;
+    if (taskRoute) {
+      renderTaskDetail(task, taskDetailColumnName);
+      announcement.textContent = `Tarefa "${title}" atualizada.`;
+      closeDialog();
+      return;
+    }
+
     renderBoard();
     announcement.textContent = `Tarefa "${title}" atualizada.`;
     closeDialog();
@@ -659,6 +849,10 @@ taskForm.addEventListener("submit", async (event) => {
   renderBoard();
   announcement.textContent = `Tarefa "${title}" adicionada em ${column.querySelector("h2").textContent}.`;
   closeDialog();
+});
+
+taskDetailEditButton.addEventListener("click", () => {
+  if (taskRoute) openEditForm(taskRoute.taskId);
 });
 
 // Fecha o formulário quando o usuário clica no fundo da janela modal.
@@ -1439,6 +1633,8 @@ setTaskActionsEnabled(false);
 // Espera o Firebase restaurar a sessão antes de carregar os dados privados.
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
+    stopTasksListener?.();
+    stopTasksListener = null;
     currentUser = null;
     currentBoard = null;
     syncShareButton();
@@ -1456,6 +1652,9 @@ onAuthStateChanged(auth, async (user) => {
     setBoardControlsEnabled(false);
     setTaskActionsEnabled(false);
     boardStatus.textContent = "Sessão não encontrada. Redirecionando para o login...";
+    if (taskRoute) {
+      setTaskDetailStatus("Entre na sua conta para abrir esta tarefa.", true);
+    }
     window.location.replace("login.html");
     return;
   }
@@ -1476,6 +1675,11 @@ onAuthStateChanged(auth, async (user) => {
     .join("");
 
   try {
+    if (taskRoute) {
+      await openTaskDetail(user);
+      return;
+    }
+
     await ensureInitialBoardAndMigrate(db, user.uid);
     if (currentUser.uid !== user.uid) return;
 
