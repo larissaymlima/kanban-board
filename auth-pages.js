@@ -15,9 +15,34 @@ import {
   setDoc
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
+function getPostAuthDestination() {
+  const returnUrl = new URLSearchParams(window.location.search).get("returnUrl");
+  if (!returnUrl) return "board.html";
+
+  let destination;
+  try {
+    destination = new URL(returnUrl, window.location.origin);
+  } catch (error) {
+    console.warn("O endereço de retorno solicitado é inválido:", error);
+    return "board.html";
+  }
+
+  const isStaticTaskRoute =
+    /(?:^|\/)board\.html$/.test(destination.pathname) &&
+    destination.searchParams.get("taskId");
+  const isRewrittenTaskRoute =
+    /(?:^|\/)tasks\/[^/]+\/?$/.test(destination.pathname);
+  if (destination.origin !== window.location.origin ||
+      (!isStaticTaskRoute && !isRewrittenTaskRoute) ||
+      !destination.searchParams.get("boardId")) return "board.html";
+
+  return `${destination.pathname}${destination.search}${destination.hash}`;
+}
+
 // Configura o formulário de login quando a página contém seus controles.
 function setupLoginForm() {
-  redirectIfAuthenticated();
+  const postAuthDestination = getPostAuthDestination();
+  redirectIfAuthenticated(postAuthDestination);
   const form = document.getElementById("loginForm");
   const message = document.getElementById("formMessage");
 
@@ -38,8 +63,8 @@ function setupLoginForm() {
 
       try {
         await signInWithEmailAndPassword(auth, email, password);
-        setMessage(message, "Login realizado com sucesso. Abrindo seu quadro...", "success");
-        window.location.replace("board.html");
+        setMessage(message, "Login realizado com sucesso. Abrindo...", "success");
+        window.location.replace(postAuthDestination);
       } catch (error) {
         console.error("Erro ao entrar com Firebase Authentication:", error);
         setMessage(message, getAuthErrorMessage(error), "error");
@@ -51,7 +76,8 @@ function setupLoginForm() {
 
 // Configura o formulário de cadastro quando a página contém seus controles.
 function setupCadastroForm() {
-  redirectIfAuthenticated();
+  const postAuthDestination = getPostAuthDestination();
+  redirectIfAuthenticated(postAuthDestination);
   const form = document.getElementById("cadastroForm");
   const message = document.getElementById("formMessage");
   const emailInput = document.getElementById("cadastroEmail");
@@ -103,8 +129,8 @@ function setupCadastroForm() {
           createdAt: serverTimestamp()
         });
 
-        setMessage(message, "Cadastro realizado com sucesso. Abrindo seu quadro...", "success");
-        window.location.replace("board.html");
+        setMessage(message, "Cadastro realizado com sucesso. Abrindo...", "success");
+        window.location.replace(postAuthDestination);
       } catch (error) {
         console.error("Erro ao criar conta ou salvar perfil no Firebase:", error);
 

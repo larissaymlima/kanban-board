@@ -40,19 +40,21 @@ import {
 } from "./board-store.js";
 
 function getTaskRouteFromLocation() {
-  const match = window.location.pathname.match(/(?:^|\/)tasks\/([^/]+)\/?$/);
-  if (!match) return null;
+  const pathMatch = window.location.pathname.match(/(?:^|\/)tasks\/([^/]+)\/?$/);
+  const query = new URLSearchParams(window.location.search);
+  const queryTaskId = query.get("taskId");
+  if (!pathMatch && !queryTaskId) return null;
 
   let taskId = "";
   try {
-    taskId = decodeURIComponent(match[1]);
+    taskId = pathMatch ? decodeURIComponent(pathMatch[1]) : queryTaskId;
   } catch (error) {
     console.error("A URL da tarefa contém um identificador inválido:", error);
   }
 
   return {
     taskId,
-    boardId: new URLSearchParams(window.location.search).get("boardId") || ""
+    boardId: query.get("boardId") || ""
   };
 }
 
@@ -113,6 +115,8 @@ let stopTasksListener = null;
 if (taskRoute) {
   document.body.classList.add("task-detail-page");
   taskDetail.hidden = false;
+  taskDetailBack.href = new URL("board.html", document.baseURI).href;
+  taskDetailBack.textContent = "Voltar à lista de quadros";
 }
 
 // Constrói a coleção de tarefas dentro do quadro ativo.
@@ -233,7 +237,8 @@ function loadTasks() {
 }
 
 function taskDetailUrl(boardId, taskId) {
-  const url = new URL(`tasks/${encodeURIComponent(taskId)}`, window.location.href);
+  const url = new URL("board.html", document.baseURI);
+  url.searchParams.set("taskId", taskId);
   url.searchParams.set("boardId", boardId);
   return url.href;
 }
@@ -247,9 +252,7 @@ function renderTaskDetail(task, columnName) {
   taskDetailRole.textContent = getRoleLabel(currentBoard.role);
   taskDetailRole.dataset.role = currentBoard.role;
   taskDetailEditButton.hidden = !canEditTasks();
-  const boardUrl = new URL("../board.html", window.location.href);
-  boardUrl.searchParams.set("boardId", currentBoard.id);
-  taskDetailBack.href = boardUrl.href;
+  taskDetailBack.href = new URL("board.html", document.baseURI).href;
   taskDetailCard.hidden = false;
   taskDetailStatus.textContent = "";
   taskDetailStatus.classList.remove("is-error");
@@ -261,6 +264,21 @@ function setTaskDetailStatus(message, isError = false) {
   taskDetailCard.hidden = true;
 }
 
+function denyTaskDetailAccess() {
+  currentBoard = null;
+  tasks = [];
+  columns = [];
+  taskDetailColumnName = "";
+  taskDetailBoard.textContent = "";
+  taskDetailTitle.textContent = "";
+  taskDetailDescription.textContent = "";
+  taskDetailColumn.textContent = "";
+  taskDetailRole.textContent = "";
+  taskDetailEditButton.hidden = true;
+  setTaskActionsEnabled(false);
+  setTaskDetailStatus("Você não tem permissão para acessar esta tarefa.", true);
+}
+
 async function openTaskDetail(user) {
   if (!taskRoute?.taskId || !taskRoute.boardId) {
     setTaskDetailStatus("O link da tarefa está incompleto ou inválido.", true);
@@ -270,7 +288,7 @@ async function openTaskDetail(user) {
   try {
     const boardSnapshot = await getDoc(doc(db, "boards", taskRoute.boardId));
     if (!boardSnapshot.exists()) {
-      setTaskDetailStatus("O quadro desta tarefa não foi encontrado.", true);
+      denyTaskDetailAccess();
       return;
     }
 
@@ -283,7 +301,7 @@ async function openTaskDetail(user) {
       if (!memberSnapshot.exists() ||
           memberSnapshot.data().uid !== user.uid ||
           !["editor", "reader"].includes(memberSnapshot.data().role)) {
-        setTaskDetailStatus("Você não tem acesso a esta tarefa.", true);
+        denyTaskDetailAccess();
         return;
       }
       role = memberSnapshot.data().role;
@@ -321,10 +339,12 @@ async function openTaskDetail(user) {
     renderTaskDetail(task, column.name);
   } catch (error) {
     console.error("Erro ao carregar a tarefa compartilhada:", error);
+    if (error.code === "permission-denied") {
+      denyTaskDetailAccess();
+      return;
+    }
     setTaskDetailStatus(
-      error.code === "permission-denied"
-        ? "Você não tem permissão para visualizar esta tarefa."
-        : "Não foi possível carregar a tarefa. Verifique sua conexão e tente novamente.",
+      "Não foi possível carregar a tarefa. Verifique sua conexão e tente novamente.",
       true
     );
   }
@@ -1655,7 +1675,14 @@ onAuthStateChanged(auth, async (user) => {
     if (taskRoute) {
       setTaskDetailStatus("Entre na sua conta para abrir esta tarefa.", true);
     }
-    window.location.replace("login.html");
+    const loginUrl = new URL("login.html", document.baseURI);
+    if (taskRoute) {
+      loginUrl.searchParams.set(
+        "returnUrl",
+        `${window.location.pathname}${window.location.search}`
+      );
+    }
+    window.location.replace(loginUrl.href);
     return;
   }
   currentUser = user;
