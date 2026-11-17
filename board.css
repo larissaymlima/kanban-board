@@ -48,6 +48,7 @@ textarea { /* Estilos do seletor textarea. */
   display: flex; /* Configura display com valor flex. */
   align-items: center; /* Configura align-items com valor center. */
   justify-content: space-between; /* Configura justify-content com valor space-between. */
+  flex-wrap: wrap;
   margin-bottom: 24px; /* Configura margin-bottom com valor 24px. */
   gap: 16px; /* Configura gap com valor 16px. */
 }
@@ -77,11 +78,28 @@ textarea { /* Estilos do seletor textarea. */
 
 .board-controls {
   display: flex;
+  flex: 1 1 520px;
   align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
   gap: 10px;
 }
 
+.board-picker {
+  display: grid;
+  flex: 1 1 240px;
+  min-width: min(100%, 220px);
+  gap: 6px;
+}
+
+.board-picker label {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
 .board-controls select {
+  width: 100%;
   min-width: 190px;
   min-height: 42px;
   margin: 0;
@@ -144,6 +162,20 @@ textarea { /* Estilos do seletor textarea. */
   border-radius: 10px;
   background: #fef2f2;
   color: #991b1b;
+}
+
+.board-status.is-warning {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  border: 1px solid rgba(200, 90, 50, 0.35);
+  border-radius: 10px;
+  background: rgba(200, 90, 50, 0.1);
+  color: #8A3E24;
+}
+
+.board-status.is-warning strong {
+  color: #E28663;
 }
 
 .board-heading h1 { /* Estilos do seletor .board-heading h1. */
@@ -581,9 +613,12 @@ textarea { /* Estilos do seletor textarea. */
     width: 100%;
   }
 
+  .board-picker {
+    flex-basis: 100%;
+  }
+
   .board-controls select {
     min-width: 0;
-    flex: 1;
   }
 
   .account-actions { /* Estilos do seletor .account-actions. */
@@ -623,6 +658,10 @@ textarea { /* Estilos do seletor textarea. */
   .board-controls {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .board-picker {
+    width: 100%;
   }
 
   .board-controls select {
@@ -864,6 +903,16 @@ textarea:focus-visible {
   background: rgba(166, 158, 147, 0.18);
 }
 
+.delete-board-button {
+  border-color: rgba(200, 90, 50, 0.55);
+  background: rgba(200, 90, 50, 0.12);
+  color: #F0B49B;
+}
+
+.delete-board-button:hover:not(:disabled) {
+  background: rgba(200, 90, 50, 0.22);
+}
+
 .share-dialog {
   width: min(660px, calc(100% - 32px));
 }
@@ -882,17 +931,6 @@ textarea:focus-visible {
   background: var(--surface-raised);
   color: var(--ink);
   font: inherit;
-}
-
-.share-help {
-  margin: 0 0 12px;
-  padding: 12px 14px;
-  border: 1px solid rgba(200, 90, 50, 0.35);
-  border-radius: 10px;
-  background: rgba(200, 90, 50, 0.1);
-  color: #F0B49B;
-  font-size: 0.85rem;
-  line-height: 1.55;
 }
 
 .share-message {

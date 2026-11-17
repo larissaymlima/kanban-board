@@ -1,52 +1,100 @@
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function hasAuthenticatedEmail() {
+      return isAuthenticated() &&
+        request.auth.token.email is string;
+    }
+
+    function normalizedAuthEmail() {
+      return request.auth.token.email.lower();
+    }
+
+    function invitationIsForAuthenticatedEmail(invitation) {
+      return hasAuthenticatedEmail() &&
+        invitation.email is string &&
+        invitation.email == normalizedAuthEmail();
+    }
+
     match /users/{userId} {
-      // Somente o usuário autenticado pode acessar seus dados de perfil.
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read, write: if isAuthenticated() &&
+        request.auth.uid == userId;
 
       match /tasks/{taskId} {
-        // Mantém a leitura dos dados legados para a migração sem permitir novas alterações.
-        allow read: if request.auth != null && request.auth.uid == userId;
+        allow read: if isAuthenticated() &&
+          request.auth.uid == userId;
       }
 
       match /migrations/{migrationId} {
-        // O estado de migração é privado e coordenado entre sessões do mesmo usuário.
-        allow read, write: if request.auth != null && request.auth.uid == userId;
+        allow read, write: if isAuthenticated() &&
+          request.auth.uid == userId;
       }
     }
 
     match /boards/{boardId} {
-      function isOwnerAfterWrite() {
-        return request.auth != null &&
-          getAfter(/databases/$(database)/documents/boards/$(boardId)).data.ownerUid == request.auth.uid;
+
+      function boardReference() {
+        return /databases/$(database)/documents/boards/$(boardId);
+      }
+
+      function memberReference(uid) {
+        return /databases/$(database)/documents/boards/$(boardId)/members/$(uid);
       }
 
       function isOwner() {
-        return request.auth != null &&
-          get(/databases/$(database)/documents/boards/$(boardId)).data.ownerUid == request.auth.uid;
+        return isAuthenticated() &&
+          get(boardReference()).data.ownerUid == request.auth.uid;
       }
 
-      allow get, list: if request.auth != null &&
-        resource != null &&
-        resource.data.ownerUid == request.auth.uid;
-      allow create: if request.auth != null &&
+      function isOwnerAfterWrite() {
+        return isAuthenticated() &&
+          getAfter(boardReference()).data.ownerUid == request.auth.uid;
+      }
+
+      function isBoardMember() {
+        return isAuthenticated() &&
+          exists(memberReference(request.auth.uid)) &&
+          get(memberReference(request.auth.uid)).data.uid == request.auth.uid &&
+          get(memberReference(request.auth.uid)).data.role in ['editor', 'reader'];
+      }
+
+      function canReadBoard() {
+        return isOwner() || isBoardMember();
+      }
+
+      function canEditBoard() {
+        return isOwner() ||
+          (isBoardMember() &&
+            get(memberReference(request.auth.uid)).data.role == 'editor');
+      }
+
+      allow get, list: if isAuthenticated() &&
+        (resource.data.ownerUid == request.auth.uid || isBoardMember());
+
+      allow create: if isAuthenticated() &&
         request.resource.data.ownerUid == request.auth.uid &&
         request.resource.data.name is string &&
         request.resource.data.name.size() > 0 &&
         request.resource.data.name.size() <= 100 &&
         request.resource.data.createdAt is timestamp &&
         request.resource.data.updatedAt is timestamp;
-      allow update: if request.auth != null &&
-        resource.data.ownerUid == request.auth.uid &&
+
+      allow update: if isOwner() &&
         request.resource.data.ownerUid == resource.data.ownerUid &&
         request.resource.data.name is string &&
         request.resource.data.name.size() > 0 &&
         request.resource.data.name.size() <= 100;
-      allow delete: if request.auth != null && resource.data.ownerUid == request.auth.uid;
+
+      allow delete: if isOwner();
 
       match /columns/{columnId} {
-        allow read: if isOwner();
+        allow get, list: if canReadBoard();
         allow create: if isOwnerAfterWrite() &&
           request.resource.data.name is string &&
           request.resource.data.name.size() > 0 &&
@@ -61,8 +109,9 @@ service cloud.firestore {
       }
 
       match /tasks/{taskId} {
-        allow read: if isOwner();
-        allow create, update: if isOwnerAfterWrite() &&
+        allow get, list: if canReadBoard();
+
+        allow create, update: if (isOwnerAfterWrite() || canEditBoard()) &&
           request.resource.data.title is string &&
           request.resource.data.title.size() > 0 &&
           request.resource.data.columnId is string &&
@@ -70,9 +119,151 @@ service cloud.firestore {
           (!("description" in request.resource.data) ||
             request.resource.data.description is string ||
             request.resource.data.description == null) &&
-          (!("status" in request.resource.data) || request.resource.data.status is string);
+          (!("status" in request.resource.data) ||
+            request.resource.data.status is string);
+
+        allow delete: if isOwner() ||
+          (isBoardMember() &&
+            get(memberReference(request.auth.uid)).data.role == 'editor');
+      }
+
+      match /members/{memberUid} {
+        function memberInvitationReference(invitationId) {
+          return /databases/$(database)/documents/boards/$(boardId)/invitations/$(invitationId);
+        }
+
+        function memberCreateMatchesAcceptedInvitation() {
+          let invitationPath =
+            memberInvitationReference(request.resource.data.invitationId);
+
+          return isAuthenticated() &&
+            hasAuthenticatedEmail() &&
+            request.resource.data.invitationId is string &&
+            request.resource.data.keys().hasAll([
+              'uid', 'name', 'role', 'addedAt', 'invitationId'
+            ]) &&
+            request.resource.data.keys().hasOnly([
+              'uid', 'name', 'role', 'addedAt', 'invitationId'
+            ]) &&
+            memberUid == request.auth.uid &&
+            request.resource.data.uid == request.auth.uid &&
+            request.resource.data.name is string &&
+            request.resource.data.name.size() > 0 &&
+            request.resource.data.name.size() <= 100 &&
+            request.resource.data.role in ['editor', 'reader'] &&
+            request.resource.data.addedAt is timestamp &&
+            request.resource.data.addedAt == request.time &&
+            !exists(memberReference(request.auth.uid)) &&
+            exists(invitationPath) &&
+            existsAfter(invitationPath) &&
+            get(invitationPath).data.status == 'pending' &&
+            get(invitationPath).data.email == normalizedAuthEmail() &&
+            get(invitationPath).data.role == request.resource.data.role &&
+            getAfter(invitationPath).data.status == 'accepted' &&
+            getAfter(invitationPath).data.email == normalizedAuthEmail() &&
+            getAfter(invitationPath).data.role == request.resource.data.role;
+        }
+
+        allow get: if isOwner() ||
+          (isAuthenticated() &&
+            memberUid == request.auth.uid &&
+            !exists(memberReference(request.auth.uid)));
+
+        allow get: if isOwner() ||
+          (isAuthenticated() &&
+            memberUid == request.auth.uid &&
+            exists(memberReference(request.auth.uid)) &&
+            resource.data.uid == request.auth.uid);
+
+        allow list: if isOwner() ||
+          (isAuthenticated() &&
+            memberUid == request.auth.uid &&
+            resource.data.uid == request.auth.uid);
+
+        allow create: if memberCreateMatchesAcceptedInvitation();
+
+        allow update: if isOwner() &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['role']) &&
+          request.resource.data.role in ['editor', 'reader'];
+
         allow delete: if isOwner();
       }
+
+      match /invitations/{invitationId} {
+        function acceptedMemberReference() {
+          return /databases/$(database)/documents/boards/$(boardId)/members/$(request.auth.uid);
+        }
+
+        function acceptedMemberExistsAfter() {
+          let memberPath = acceptedMemberReference();
+
+          return !exists(memberPath) &&
+            existsAfter(memberPath) &&
+            getAfter(memberPath).data.uid == request.auth.uid &&
+            getAfter(memberPath).data.invitationId == invitationId &&
+            getAfter(memberPath).data.role == resource.data.role &&
+            getAfter(memberPath).data.addedAt == request.time;
+        }
+
+        function ownerCancelsPendingInvitation() {
+          return isOwner() &&
+            resource.data.status == 'pending' &&
+            request.resource.data.status == 'cancelled' &&
+            request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']);
+        }
+
+        function recipientRespondsToPendingInvitation() {
+          return invitationIsForAuthenticatedEmail(resource.data) &&
+            resource.data.status == 'pending' &&
+            request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']) &&
+            (
+              request.resource.data.status == 'declined' ||
+              (
+                request.resource.data.status == 'accepted' &&
+                acceptedMemberExistsAfter()
+              )
+            );
+        }
+
+        allow get, list: if isOwner() ||
+          invitationIsForAuthenticatedEmail(resource.data);
+
+        allow create: if isOwner() &&
+          request.resource.data.keys().hasAll([
+            'email', 'ownerUid', 'ownerName', 'boardName',
+            'role', 'status', 'createdAt'
+          ]) &&
+          request.resource.data.keys().hasOnly([
+            'email', 'ownerUid', 'ownerName', 'boardName',
+            'role', 'status', 'createdAt'
+          ]) &&
+          request.resource.data.email is string &&
+          request.resource.data.email == request.resource.data.email.lower() &&
+          request.resource.data.ownerUid == request.auth.uid &&
+          request.resource.data.ownerName is string &&
+          request.resource.data.ownerName.size() <= 100 &&
+          request.resource.data.boardName == get(boardReference()).data.name &&
+          request.resource.data.role in ['editor', 'reader'] &&
+          request.resource.data.status == 'pending' &&
+          request.resource.data.createdAt is timestamp &&
+          request.resource.data.createdAt == request.time &&
+          (!hasAuthenticatedEmail() ||
+            request.resource.data.email != normalizedAuthEmail());
+
+        allow update: if ownerCancelsPendingInvitation() ||
+          recipientRespondsToPendingInvitation();
+
+        allow delete: if isOwner();
+      }
+    }
+
+    match /{path=**}/members/{memberUid} {
+      allow get, list: if isAuthenticated() &&
+        resource.data.uid == request.auth.uid;
+    }
+
+    match /{path=**}/invitations/{invitationId} {
+      allow get, list: if invitationIsForAuthenticatedEmail(resource.data);
     }
   }
 }
