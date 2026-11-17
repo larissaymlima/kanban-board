@@ -93,6 +93,33 @@
         <p class="task-detail-description" id="task-detail-description"></p>
         <p class="task-detail-column" id="task-detail-column"></p>
         <p class="board-role-badge" id="task-detail-role"></p>
+        <div class="task-metadata" id="task-metadata">
+          <label for="task-assignee">Responsável</label>
+          <select id="task-assignee" disabled>
+            <option value="">Sem responsável</option>
+          </select>
+          <p class="task-assignee-status" id="task-assignee-status" hidden></p>
+          <label for="task-priority">Prioridade</label>
+          <select id="task-priority" disabled>
+            <option value="">Sem prioridade</option>
+            <option value="low">Baixa</option>
+            <option value="medium">Média</option>
+            <option value="high">Alta</option>
+            <option value="urgent">Urgente</option>
+          </select>
+          <div class="task-detail-labels">
+            <h2>Etiquetas</h2>
+            <ul class="task-label-list" id="task-detail-label-list"></ul>
+            <form class="task-label-form" id="task-label-form" hidden>
+              <label for="task-label-name">Nome da etiqueta</label>
+              <input id="task-label-name" name="name" type="text" maxlength="24" required>
+              <label for="task-label-color">Cor</label>
+              <input id="task-label-color" name="color" type="color" value="#3B7A57">
+              <button class="share-action-button" id="task-label-add" type="submit">Adicionar etiqueta</button>
+            </form>
+          </div>
+        </div>
+        <p class="task-metadata-status" id="task-metadata-status" role="status" aria-live="polite"></p>
         <button class="add-task-button" id="task-detail-edit" type="button" hidden>Editar tarefa</button>
       </article>
       <section class="task-comments" id="task-comments" aria-labelledby="task-comments-title" hidden>
