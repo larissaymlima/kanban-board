@@ -22,7 +22,8 @@ import {
   onSnapshot,
   serverTimestamp,
   setDoc,
-  updateDoc
+  updateDoc,
+  writeBatch
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import {
   createBoard,
@@ -71,6 +72,19 @@ const activeBoardRole = document.querySelector("#active-board-role");
 const createBoardButton = document.querySelector("#create-board-button");
 const shareBoardButton = document.querySelector("#share-board-button");
 const deleteBoardButton = document.querySelector("#delete-board-button");
+const manageColumnsButton = document.querySelector("#manage-columns-button");
+const columnsDialog = document.querySelector("#columns-dialog");
+const columnsDialogStatus = document.querySelector("#columns-dialog-status");
+const columnManagementList = document.querySelector("#column-management-list");
+const columnCreateForm = document.querySelector("#column-create-form");
+const newColumnName = document.querySelector("#new-column-name");
+const createColumnSubmit = document.querySelector("#create-column-submit");
+const columnDeleteDialog = document.querySelector("#column-delete-dialog");
+const columnDeleteDescription = document.querySelector("#column-delete-description");
+const columnDeleteDestinationField = document.querySelector("#column-delete-destination-field");
+const columnDeleteDestination = document.querySelector("#column-delete-destination");
+const columnDeleteStatus = document.querySelector("#column-delete-status");
+const confirmColumnDeleteButton = document.querySelector("#confirm-column-delete");
 const editAccountButton = document.querySelector("#edit-account-button");
 // Referências aos formulários, caixas de diálogo e avisos acessíveis do quadro.
 const dialog = document.querySelector("#task-dialog");
@@ -124,6 +138,8 @@ let receivedInvitations = [];
 let draggedTaskId = null;
 let editingTaskId = null;
 let pendingDeleteTaskId = null;
+let pendingDeleteColumnId = null;
+let isColumnManagementBusy = false;
 let boardReady = false;
 let taskDetailColumnName = "";
 let stopTasksListener = null;
@@ -178,6 +194,13 @@ function canManageWipLimits() {
     currentBoard.ownerUid === currentUser.uid);
 }
 
+function setColumnManagementBusy(busy) {
+  isColumnManagementBusy = busy;
+  columnManagementList.inert = busy;
+  columnCreateForm.inert = busy;
+  createColumnSubmit.disabled = busy || !boardReady || !canManageWipLimits();
+}
+
 function syncWipControls(enabled = boardReady) {
   columns.forEach((column) => {
     const isSaving = column.dataset.wipSaving === "true";
@@ -224,6 +247,7 @@ function clearWipWarning() {
 
 function syncShareButton() {
   shareBoardButton.hidden = !canManageMembers();
+  manageColumnsButton.hidden = !canManageWipLimits();
   deleteBoardButton.hidden = !canDeleteCurrentBoard();
 }
 
@@ -781,6 +805,10 @@ async function openTaskDetail(user) {
 function setTaskActionsEnabled(enabled) {
   boardReady = enabled;
   const canEdit = enabled && canEditTasks();
+  manageColumnsButton.disabled = !enabled || !canManageWipLimits();
+  createColumnSubmit.disabled = !enabled ||
+    !canManageWipLimits() ||
+    isColumnManagementBusy;
   document.querySelectorAll(".column-add-task").forEach((button) => {
     button.disabled = !canEdit;
   });
@@ -794,6 +822,7 @@ function setBoardControlsEnabled(enabled) {
   createBoardButton.disabled = !enabled;
   editAccountButton.disabled = !enabled;
   deleteBoardButton.disabled = !enabled || !canDeleteCurrentBoard();
+  manageColumnsButton.disabled = !enabled || !boardReady || !canManageWipLimits();
 }
 
 function selectedBoardStorageKey(userId) {
@@ -1200,12 +1229,34 @@ function startColumnWipListener(boardId) {
     collection(db, "boards", boardId, "columns"),
     (snapshot) => {
       if (currentBoard?.id !== boardId) return;
-      snapshot.docs.forEach((columnDocument) => {
-        const column = columns.find((item) => item.dataset.columnId === columnDocument.id);
+      const updatedColumns = snapshot.docs
+        .map((columnDocument) => ({
+          ...columnDocument.data(),
+          id: columnDocument.id
+        }))
+        .sort((left, right) =>
+          left.order - right.order || left.id.localeCompare(right.id)
+        );
+      const structureChanged = updatedColumns.length !== columns.length ||
+        updatedColumns.some((columnData, index) => {
+          const currentColumn = columns[index];
+          return !currentColumn ||
+            currentColumn.dataset.columnId !== columnData.id ||
+            currentColumn.dataset.order !== String(columnData.order) ||
+            currentColumn.querySelector("h2").textContent !== columnData.name;
+        });
+      if (structureChanged) {
+        renderColumns(updatedColumns);
+        renderBoard();
+        if (columnsDialog.open) renderColumnManagementList();
+        return;
+      }
+
+      updatedColumns.forEach((columnData) => {
+        const column = columns.find((item) => item.dataset.columnId === columnData.id);
         if (!column) return;
-        const data = columnDocument.data();
-        const limit = Number.isSafeInteger(data.wipLimit) && data.wipLimit >= 0
-          ? data.wipLimit
+        const limit = Number.isSafeInteger(columnData.wipLimit) && columnData.wipLimit >= 0
+          ? columnData.wipLimit
           : null;
         updateColumnWipState(column, limit);
       });
@@ -1220,12 +1271,349 @@ function startColumnWipListener(boardId) {
   stopColumnsListener = unsubscribe;
 }
 
+function setColumnsDialogMessage(message, isError = false, isSuccess = false) {
+  columnsDialogStatus.textContent = message;
+  columnsDialogStatus.classList.toggle("is-error", isError);
+  columnsDialogStatus.classList.toggle("is-success", isSuccess);
+}
+
+function orderedColumnElements() {
+  return [...columns];
+}
+
+function renderColumnManagementList() {
+  columnManagementList.replaceChildren();
+  const currentColumns = orderedColumnElements();
+  currentColumns.forEach((column, index) => {
+    const row = document.createElement("li");
+    row.className = "column-management-row";
+
+    const title = document.createElement("span");
+    title.className = "column-management-current-name";
+    title.textContent = column.querySelector("h2").textContent;
+    row.append(title);
+
+    const renameForm = document.createElement("form");
+    renameForm.className = "column-rename-form";
+    const nameInput = document.createElement("input");
+    nameInput.type = "text";
+    nameInput.maxLength = 100;
+    nameInput.required = true;
+    nameInput.value = title.textContent;
+    nameInput.setAttribute("aria-label", `Novo nome para ${title.textContent}`);
+    const renameButton = document.createElement("button");
+    renameButton.className = "column-management-button";
+    renameButton.type = "submit";
+    renameButton.textContent = "Renomear";
+    renameForm.append(nameInput, renameButton);
+    renameForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      void renameManagedColumn(column, nameInput.value);
+    });
+
+    const actions = document.createElement("div");
+    actions.className = "column-management-actions";
+    const upButton = document.createElement("button");
+    upButton.className = "column-management-button";
+    upButton.type = "button";
+    upButton.textContent = "↑";
+    upButton.setAttribute("aria-label", `Mover ${title.textContent} para a esquerda`);
+    upButton.disabled = index === 0;
+    upButton.addEventListener("click", () => void moveManagedColumn(index, -1));
+
+    const downButton = document.createElement("button");
+    downButton.className = "column-management-button";
+    downButton.type = "button";
+    downButton.textContent = "↓";
+    downButton.setAttribute("aria-label", `Mover ${title.textContent} para a direita`);
+    downButton.disabled = index === currentColumns.length - 1;
+    downButton.addEventListener("click", () => void moveManagedColumn(index, 1));
+
+    const deleteButton = document.createElement("button");
+    deleteButton.className = "column-management-button column-management-delete";
+    deleteButton.type = "button";
+    deleteButton.textContent = "Excluir";
+    deleteButton.disabled = currentColumns.length <= 1;
+    deleteButton.addEventListener("click", () =>
+      openColumnDeleteDialog(column.dataset.columnId)
+    );
+    actions.append(upButton, downButton, deleteButton);
+    row.append(renameForm, actions);
+    columnManagementList.append(row);
+  });
+}
+
+async function refreshBoardColumns() {
+  if (!currentBoard) return;
+  const boardId = currentBoard.id;
+  const updatedColumns = await loadBoardColumns(db, boardId);
+  if (!updatedColumns.length) {
+    throw new Error("O quadro precisa manter pelo menos uma coluna.");
+  }
+  if (currentBoard?.id !== boardId) return;
+  stopColumnsListener?.();
+  stopColumnsListener = null;
+  renderColumns(updatedColumns);
+  startColumnWipListener(boardId);
+  renderBoard();
+  if (columnsDialog.open) renderColumnManagementList();
+}
+
+async function renameManagedColumn(column, rawName) {
+  if (!canManageWipLimits() || !boardReady || isColumnManagementBusy) return;
+  const name = rawName.trim();
+  if (!name || name.length > 100) {
+    setColumnsDialogMessage("O nome da coluna deve ter entre 1 e 100 caracteres.", true);
+    return;
+  }
+
+  setColumnManagementBusy(true);
+  try {
+    await updateDoc(doc(db, "boards", currentBoard.id, "columns", column.dataset.columnId), {
+      name
+    });
+    await refreshBoardColumns();
+    setColumnsDialogMessage("Coluna renomeada.", false, true);
+  } catch (error) {
+    console.error("Erro ao renomear a coluna:", error);
+    setColumnsDialogMessage(error.code === "permission-denied"
+      ? "O Firestore não permitiu renomear a coluna. Confirme que as regras permitem essa operação ao proprietário."
+      : "Não foi possível renomear a coluna. Tente novamente.", true);
+  } finally {
+    setColumnManagementBusy(false);
+  }
+}
+
+async function moveManagedColumn(index, offset) {
+  if (!canManageWipLimits() || !boardReady || isColumnManagementBusy) return;
+  const currentColumns = orderedColumnElements();
+  const adjacentIndex = index + offset;
+  if (adjacentIndex < 0 || adjacentIndex >= currentColumns.length) return;
+
+  const firstColumn = currentColumns[index];
+  const secondColumn = currentColumns[adjacentIndex];
+  const firstOrder = Number(firstColumn.dataset.order);
+  const secondOrder = Number(secondColumn.dataset.order);
+  if (!Number.isSafeInteger(firstOrder) || !Number.isSafeInteger(secondOrder)) {
+    setColumnsDialogMessage("A ordem salva de uma coluna é inválida; não foi possível reordenar.", true);
+    return;
+  }
+
+  setColumnManagementBusy(true);
+  const batch = writeBatch(db);
+  batch.update(doc(db, "boards", currentBoard.id, "columns", firstColumn.dataset.columnId), {
+    order: secondOrder
+  });
+  batch.update(doc(db, "boards", currentBoard.id, "columns", secondColumn.dataset.columnId), {
+    order: firstOrder
+  });
+  try {
+    await batch.commit();
+    await refreshBoardColumns();
+    setColumnsDialogMessage("Ordem das colunas atualizada.", false, true);
+  } catch (error) {
+    console.error("Erro ao reordenar as colunas:", error);
+    setColumnsDialogMessage(error.code === "permission-denied"
+      ? "O Firestore não permitiu reordenar as colunas. Confirme que as regras permitem essa operação ao proprietário."
+      : "Não foi possível reordenar as colunas. Tente novamente.", true);
+  } finally {
+    setColumnManagementBusy(false);
+  }
+}
+
+async function createManagedColumn(rawName) {
+  if (!canManageWipLimits() || !boardReady || isColumnManagementBusy) return;
+  const name = rawName.trim();
+  if (!name || name.length > 100) {
+    setColumnsDialogMessage("O nome da coluna deve ter entre 1 e 100 caracteres.", true);
+    return;
+  }
+
+  const highestOrder = columns.reduce(
+    (highest, column) => Math.max(highest, Number(column.dataset.order)),
+    -1
+  );
+  setColumnManagementBusy(true);
+  try {
+    await addDoc(collection(db, "boards", currentBoard.id, "columns"), {
+      name,
+      order: highestOrder + 1,
+      createdAt: serverTimestamp()
+    });
+    await refreshBoardColumns();
+    columnCreateForm.reset();
+    setColumnsDialogMessage("Coluna criada.", false, true);
+  } catch (error) {
+    console.error("Erro ao criar a coluna:", error);
+    setColumnsDialogMessage(error.code === "permission-denied"
+      ? "O Firestore não permitiu criar a coluna. Confirme que as regras permitem essa operação ao proprietário."
+      : "Não foi possível criar a coluna. Tente novamente.", true);
+  } finally {
+    setColumnManagementBusy(false);
+  }
+}
+
+function closeColumnDeleteDialog() {
+  if (columnDeleteDialog.open) columnDeleteDialog.close();
+  pendingDeleteColumnId = null;
+  columnDeleteStatus.textContent = "";
+  columnDeleteStatus.classList.remove("is-error");
+}
+
+function openColumnDeleteDialog(columnId) {
+  if (!canManageWipLimits() || !boardReady) return;
+  if (columns.length <= 1) {
+    setColumnsDialogMessage("O quadro precisa manter pelo menos uma coluna.", true);
+    return;
+  }
+  const sourceColumn = columns.find((column) => column.dataset.columnId === columnId);
+  if (!sourceColumn) return;
+  pendingDeleteColumnId = columnId;
+  const sourceTasks = tasks.filter((task) => task.columnId === columnId);
+  columnDeleteDescription.textContent = sourceTasks.length
+    ? `A coluna "${sourceColumn.querySelector("h2").textContent}" contém ${sourceTasks.length} tarefas. Escolha uma coluna de destino; as tarefas e seus comentários serão preservados.`
+    : `A coluna "${sourceColumn.querySelector("h2").textContent}" está vazia.`;
+  columnDeleteDestination.replaceChildren();
+  const promptOption = document.createElement("option");
+  promptOption.value = "";
+  promptOption.textContent = "Selecione uma coluna de destino";
+  promptOption.disabled = true;
+  promptOption.selected = true;
+  columnDeleteDestination.append(promptOption);
+  columns
+    .filter((column) => column.dataset.columnId !== columnId)
+    .forEach((column) => {
+      const option = document.createElement("option");
+      option.value = column.dataset.columnId;
+      option.textContent = column.querySelector("h2").textContent;
+      columnDeleteDestination.append(option);
+    });
+  columnDeleteDestinationField.hidden = sourceTasks.length === 0;
+  columnDeleteStatus.textContent = "";
+  columnDeleteStatus.classList.remove("is-error");
+  columnDeleteDialog.showModal();
+}
+
+async function confirmDeleteColumn() {
+  if (!canManageWipLimits() || !boardReady ||
+      isColumnManagementBusy || !pendingDeleteColumnId) return;
+  if (columns.length <= 1) {
+    columnDeleteStatus.textContent = "O quadro precisa manter pelo menos uma coluna.";
+    columnDeleteStatus.classList.add("is-error");
+    return;
+  }
+
+  const boardId = currentBoard.id;
+  const sourceId = pendingDeleteColumnId;
+  const destinationId = columnDeleteDestination.value;
+  if (destinationId === sourceId) return;
+
+  confirmColumnDeleteButton.disabled = true;
+  setColumnManagementBusy(true);
+  columnDeleteStatus.textContent = "Movendo tarefas e excluindo a coluna...";
+  columnDeleteStatus.classList.remove("is-error");
+  setBoardControlsEnabled(false);
+  setTaskActionsEnabled(false);
+  try {
+    const [freshColumns, taskSnapshot] = await Promise.all([
+      loadBoardColumns(db, boardId),
+      getDocs(tasksCollection(boardId))
+    ]);
+    const sourceColumn = freshColumns.find((column) => column.id === sourceId);
+    const destinationColumn = freshColumns.find((column) => column.id === destinationId);
+    if (!sourceColumn || freshColumns.length <= 1) {
+      throw new Error("A coluna não está mais disponível ou é a última do quadro.");
+    }
+
+    const sourceTasks = taskSnapshot.docs.filter(
+      (taskDocument) => taskDocument.data().columnId === sourceId
+    );
+    if (sourceTasks.length && columnDeleteDestinationField.hidden) {
+      columnDeleteDescription.textContent =
+        `A coluna agora contém ${sourceTasks.length} tarefas. Escolha uma coluna de destino para preservá-las.`;
+      columnDeleteDestinationField.hidden = false;
+      throw new Error("A coluna recebeu tarefas desde a abertura desta confirmação. Escolha a coluna de destino.");
+    }
+    if (sourceTasks.length) {
+      columnDeleteDescription.textContent =
+        `Serão movidas ${sourceTasks.length} tarefas da coluna "${sourceColumn.name}". Os dados e comentários das tarefas serão preservados.`;
+    }
+    if (sourceTasks.length && !destinationColumn) {
+      throw new Error("Selecione uma coluna de destino válida.");
+    }
+    if (sourceTasks.length && Number.isSafeInteger(destinationColumn.wipLimit)) {
+      const destinationCount = taskSnapshot.docs.filter(
+        (taskDocument) => taskDocument.data().columnId === destinationId
+      ).length;
+      if (destinationCount + sourceTasks.length > destinationColumn.wipLimit) {
+        throw new Error(`A coluna de destino só tem espaço para ${Math.max(
+          destinationColumn.wipLimit - destinationCount,
+          0
+        )} das ${sourceTasks.length} tarefas.`);
+      }
+    }
+
+    const sourceReference = doc(db, "boards", boardId, "columns", sourceId);
+    const chunkSize = 450;
+    for (let offset = 0; offset < sourceTasks.length || offset === 0; offset += chunkSize) {
+      const chunk = sourceTasks.slice(offset, offset + chunkSize);
+      const isFinalChunk = offset + chunk.length >= sourceTasks.length;
+      const batch = writeBatch(db);
+      chunk.forEach((taskDocument) => {
+        const updates = {
+          columnId: destinationId,
+          updatedAt: serverTimestamp()
+        };
+        if (Object.prototype.hasOwnProperty.call(taskDocument.data(), "status")) {
+          updates.status = destinationId;
+        }
+        batch.update(taskDocument.ref, updates);
+      });
+      if (isFinalChunk) batch.delete(sourceReference);
+      await batch.commit();
+
+      chunk.forEach((taskDocument) => {
+        const localTask = tasks.find((task) => task.id === taskDocument.id);
+        if (!localTask) return;
+        localTask.columnId = destinationId;
+        if (Object.prototype.hasOwnProperty.call(taskDocument.data(), "status")) {
+          localTask.status = destinationId;
+        }
+      });
+      renderBoard();
+      if (isFinalChunk) break;
+    }
+
+    await refreshBoardColumns();
+    closeColumnDeleteDialog();
+    setColumnsDialogMessage(
+      sourceTasks.length
+        ? `Coluna excluída; ${sourceTasks.length} tarefas foram movidas para ${destinationColumn.name}.`
+        : "Coluna excluída.",
+      false,
+      true
+    );
+    announcement.textContent = columnsDialogStatus.textContent;
+  } catch (error) {
+    console.error("Erro ao excluir coluna:", error);
+    columnDeleteStatus.textContent = error.message ||
+      "Não foi possível excluir a coluna. As tarefas permanecem preservadas.";
+    columnDeleteStatus.classList.add("is-error");
+  } finally {
+    confirmColumnDeleteButton.disabled = false;
+    setColumnManagementBusy(false);
+    setTaskActionsEnabled(true);
+    setBoardControlsEnabled(true);
+  }
+}
+
 function renderColumns(boardColumns) {
   boardElement.replaceChildren();
   columns = boardColumns.map((boardColumn, index) => {
     const column = document.createElement("section");
     column.className = "board-column";
     column.dataset.columnId = boardColumn.id;
+    column.dataset.order = String(boardColumn.order);
     if (Number.isSafeInteger(boardColumn.wipLimit) && boardColumn.wipLimit >= 0) {
       column.dataset.wipLimit = String(boardColumn.wipLimit);
     }
@@ -2129,7 +2517,39 @@ document.querySelector("#cancel-board-form").addEventListener("click", closeBoar
 boardDialog.addEventListener("click", (event) => {
   if (event.target === boardDialog) closeBoardDialog();
 });
-
+manageColumnsButton.addEventListener("click", () => {
+  if (!canManageWipLimits() || !boardReady) return;
+  setColumnsDialogMessage("");
+  renderColumnManagementList();
+  columnsDialog.showModal();
+});
+document.querySelector("#close-columns-dialog").addEventListener("click", () => {
+  columnsDialog.close();
+});
+columnsDialog.addEventListener("click", (event) => {
+  if (event.target === columnsDialog) columnsDialog.close();
+});
+columnCreateForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  void createManagedColumn(newColumnName.value);
+});
+document.querySelector("#close-column-delete-dialog").addEventListener(
+  "click",
+  closeColumnDeleteDialog
+);
+document.querySelector("#cancel-column-delete").addEventListener(
+  "click",
+  closeColumnDeleteDialog
+);
+confirmColumnDeleteButton.addEventListener("click", () => {
+  void confirmDeleteColumn();
+});
+columnDeleteDialog.addEventListener("click", (event) => {
+  if (event.target === columnDeleteDialog) closeColumnDeleteDialog();
+});
+columnDeleteDialog.addEventListener("close", () => {
+  pendingDeleteColumnId = null;
+});
 shareBoardButton.addEventListener("click", openShareDialog);
 document.querySelector("#close-share-dialog").addEventListener("click", closeShareDialog);
 shareDialog.addEventListener("click", (event) => {

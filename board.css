@@ -1083,6 +1083,143 @@ textarea:focus-visible {
   width: min(660px, calc(100% - 32px));
 }
 
+.columns-dialog {
+  width: min(820px, calc(100% - 32px));
+}
+
+.column-delete-dialog {
+  width: min(520px, calc(100% - 32px));
+}
+
+.column-management-list {
+  display: grid;
+  gap: 10px;
+  max-height: min(55vh, 480px);
+  margin: 0;
+  padding: 0;
+  overflow: auto;
+  list-style: none;
+}
+
+.column-management-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-raised);
+}
+
+.column-management-current-name {
+  grid-column: 1 / -1;
+  color: var(--ink);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.column-rename-form {
+  display: flex;
+  min-width: 0;
+  gap: 7px;
+  margin: 0;
+}
+
+.columns-dialog .column-rename-form,
+.columns-dialog .column-create-form {
+  margin-bottom: 0;
+}
+
+.column-rename-form input {
+  min-width: 0;
+  min-height: 38px;
+  padding: 6px 9px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.column-management-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.column-management-button {
+  min-height: 36px;
+  padding: 5px 9px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+  font: 700 0.78rem Arial, Helvetica, sans-serif;
+}
+
+.column-management-button:hover:not(:disabled) {
+  border-color: var(--primary);
+  background: rgba(59, 122, 87, 0.12);
+}
+
+.column-management-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.column-management-delete {
+  border-color: rgba(200, 90, 50, 0.45);
+  color: #E28663;
+}
+
+.column-create-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 8px 10px;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+.column-create-form label {
+  grid-column: 1 / -1;
+  color: var(--ink);
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.column-create-form input {
+  min-width: 0;
+  min-height: 42px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--surface-raised);
+  color: var(--ink);
+}
+
+.column-create-form .add-task-button {
+  min-height: 42px;
+}
+
+.column-delete-dialog select {
+  width: 100%;
+  min-height: 42px;
+  margin-top: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--surface-raised);
+  color: var(--ink);
+}
+
+.column-delete-dialog [hidden] {
+  display: none;
+}
+
 .share-dialog form {
   margin-bottom: 24px;
 }
@@ -1543,6 +1680,34 @@ body.task-detail-page #board-status {
 @media (max-width: 560px) {
   .share-dialog {
     padding: 18px;
+  }
+
+  .column-management-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .column-management-current-name {
+    grid-column: auto;
+  }
+
+  .column-rename-form {
+    width: 100%;
+  }
+
+  .column-rename-form input {
+    flex: 1;
+  }
+
+  .column-management-actions {
+    justify-content: flex-start;
+  }
+
+  .column-create-form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .column-create-form label {
+    grid-column: auto;
   }
 
   .share-board-button {
