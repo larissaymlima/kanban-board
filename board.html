@@ -77,6 +77,9 @@
         <button class="share-board-button" id="share-board-button" type="button" hidden>
           Compartilhar quadro
         </button>
+        <button class="share-board-button" id="manage-columns-button" type="button" hidden>
+          Gerenciar colunas
+        </button>
         <button class="share-board-button delete-board-button" id="delete-board-button" type="button" hidden disabled>
           Excluir quadro
         </button>
@@ -188,6 +191,37 @@
       <p class="share-message" id="share-invitations-status" role="status" aria-live="polite"></p>
       <ul class="member-list" id="pending-invitation-list"></ul>
     </section>
+  </dialog>
+
+  <dialog class="task-dialog share-dialog columns-dialog" id="columns-dialog" aria-labelledby="columns-dialog-title">
+    <div class="dialog-heading">
+      <h2 id="columns-dialog-title">Gerenciar colunas</h2>
+      <button class="close-dialog" type="button" id="close-columns-dialog" aria-label="Fechar">×</button>
+    </div>
+    <p class="share-message" id="columns-dialog-status" role="status" aria-live="polite"></p>
+    <ul class="column-management-list" id="column-management-list"></ul>
+    <form class="column-create-form" id="column-create-form">
+      <label for="new-column-name">Nova coluna</label>
+      <input id="new-column-name" name="name" type="text" maxlength="100" placeholder="Nome da coluna" required>
+      <button class="add-task-button" type="submit" id="create-column-submit">Criar coluna</button>
+    </form>
+  </dialog>
+
+  <dialog class="task-dialog share-dialog column-delete-dialog" id="column-delete-dialog" aria-labelledby="column-delete-title">
+    <div class="dialog-heading">
+      <h2 id="column-delete-title">Excluir coluna</h2>
+      <button class="close-dialog" type="button" id="close-column-delete-dialog" aria-label="Fechar">×</button>
+    </div>
+    <p class="share-message" id="column-delete-description"></p>
+    <div id="column-delete-destination-field">
+      <label for="column-delete-destination">Mover as tarefas para</label>
+      <select id="column-delete-destination"></select>
+    </div>
+    <p class="share-message" id="column-delete-status" role="status" aria-live="polite"></p>
+    <div class="dialog-actions">
+      <button class="cancel-button" type="button" id="cancel-column-delete">Cancelar</button>
+      <button class="confirm-delete-button" type="button" id="confirm-column-delete">Excluir coluna</button>
+    </div>
   </dialog>
 
   <dialog class="task-dialog share-dialog received-invitations-dialog" id="received-invitations-dialog" aria-labelledby="received-invitations-title">
